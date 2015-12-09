@@ -4,3 +4,4 @@
 .DS_Store
 Thumbs.db
 *.pyc
+shape_predictor_68_face_landmarks.dat

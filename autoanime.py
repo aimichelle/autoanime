@@ -14,10 +14,14 @@ def autoanime(fname):
     shape = predict_shape(fname)
 
     orig_im = Image.open(fname)
-    new_im = Image.new("RGB", (orig_im.size[0], orig_im.size[1]))
+    new_im = Image.new("RGB", (orig_im.size[0], orig_im.size[1]), color=(255,255,255))
 
+    # test = orig_im.resize((orig_im.size[0]/100, orig_im.size[1]/100))
+    # test = orig_im.resize((orig_im.size[0]*100, orig_im.size[1]*100))
+    # test.save("test_resize.png", "PNG")
     # Draw outline
     new_im = draw_lineart(new_im, shape)
+    # new_im = draw_lineart(orig_im, shape)
 
     # Save image
     new_im.save("test.png", "PNG")
@@ -25,20 +29,90 @@ def autoanime(fname):
 def draw_lineart(im, shape):
     draw = ImageDraw.Draw(im)
 
-    # Draw lines
-    prev_x = shape.part(0).x
-    prev_y = shape.part(0).y
-    for i in range(1,17):
-        if (i != 1 and i != 2 and i != 4   and i != 7 and i != 9 and  i != 12  and i != 14 and i != 15):
-            drawLine(draw, im, prev_x, prev_y, shape.part(i).x,shape.part(i).y, (0,0,0,255))
-            prev_x = shape.part(i).x
-            prev_y = shape.part(i).y
-    prev_x = shape.part(60).x
-    prev_y = shape.part(60).y
-    drawLine(draw, im, shape.part(31).x, shape.part(31).y, shape.part(33).x,shape.part(33).y, (255,255,255,255))
-    drawLine(draw, im, shape.part(33).x, shape.part(33).y, shape.part(35).x,shape.part(35).y, (0,0,0,255))
+    # Draw sides of face
+    drawLine(draw, im, shape.part(0).x, shape.part(0).y, shape.part(3).x, shape.part(3).y, (0,0,0,255) )
+    drawLine(draw, im, shape.part(13).x, shape.part(13).y, shape.part(16).x, shape.part(16).y, (0,0,0,255))
+
+    # Draw cheeks
+    drawLine(draw, im, shape.part(3).x, shape.part(3).y, (shape.part(4).x + shape.part(3).x)/2, (shape.part(4).y+shape.part(3).y)/2, (0,0,0,255))
+    drawLine(draw, im, shape.part(5).x, shape.part(5).y, (shape.part(3).x + shape.part(4).x)/2, (shape.part(4).y+shape.part(3).y)/2, (0,0,0,255)) 
+
+    drawLine(draw, im, shape.part(13).x, shape.part(13).y, (shape.part(13).x + shape.part(12).x)/2, (shape.part(13).y+shape.part(12).y)/2, (0,0,0,255))
+    drawLine(draw, im, shape.part(11).x, shape.part(11).y, (shape.part(13).x + shape.part(12).x)/2, (shape.part(13).y+shape.part(12).y)/2, (0,0,0,255))   
+    # drawLine(draw, im, shape.part(3).x, shape.part(3).y, shape.part(5).x, shape.part(5).y, (0,0,0,255)) ##
+    # drawLine(draw, im, shape.part(13).x, shape.part(13).y, shape.part(11).x, shape.part(11).y, (0,0,0,255)) ##
+
+    # Draw chin
+    drawLine(draw, im, shape.part(5).x, shape.part(5).y, (shape.part(5).x + shape.part(6).x)/2, (shape.part(5).y+shape.part(6).y)/2, (0,0,0,255))
+    drawLine(draw, im, (shape.part(8).x)+(shape.part(7).x-shape.part(8).x)/6, (shape.part(8).y)+(shape.part(7).y-shape.part(8).y)/6, (shape.part(5).x + shape.part(6).x)/2, (shape.part(5).y+shape.part(6).y)/2, (0,0,0,255))  
+    drawLine(draw, im, (shape.part(8).x)+(shape.part(7).x-shape.part(8).x)/6,  (shape.part(8).y)+(shape.part(7).y-shape.part(8).y)/6, shape.part(8).x, shape.part(8).y, (0,0,0,255))  
+    
+    drawLine(draw, im, shape.part(11).x, shape.part(11).y, (shape.part(11).x + shape.part(10).x)/2, (shape.part(11).y+shape.part(10).y)/2, (0,0,0,255))
+    drawLine(draw, im, (shape.part(8).x)+(shape.part(9).x-shape.part(8).x)/6, (shape.part(8).y)+(shape.part(9).y-shape.part(8).y)/6, (shape.part(11).x + shape.part(10).x)/2, (shape.part(11).y+shape.part(10).y)/2, (0,0,0,255))  
+    drawLine(draw, im, (shape.part(8).x)+(shape.part(9).x-shape.part(8).x)/6,  (shape.part(8).y)+(shape.part(9).y-shape.part(8).y)/6, shape.part(8).x, shape.part(8).y, (0,0,0,255))  
+    # drawLine(draw, im, shape.part(5).x, shape.part(5).y, shape.part(8).x, shape.part(8).y, (0,0,0,255)) ## 
+    # drawLine(draw, im, shape.part(11).x, shape.part(11).y, shape.part(8).x, shape.part(8).y, (0,0,0,255)) ##
+
+    # draw nose (for female)
+    nose_height = (shape.part(33).y - shape.part(30).y)/float(5)
+    drawLine(draw, im, shape.part(33).x, (shape.part(33).y+shape.part(30).y)/2, (shape.part(33).x) - nose_height/1, (shape.part(33).y+shape.part(30).y)/2 - nose_height, (0,0,0,255))
+
+    im = draw_mouth(im, shape, draw)
+
+    # Draw neck
+    m = ((shape.part(8).y)+(shape.part(7).y-shape.part(8).y)/6- (shape.part(5).y+shape.part(6).y)/2) / float((shape.part(8).x)+(shape.part(7).x-shape.part(8).x)/6 - (shape.part(5).x + shape.part(6).x)/2)
+    b = (shape.part(5).y+shape.part(6).y)/2 - m*(shape.part(5).x + shape.part(6).x)/2
+    
+    neck_height = shape.part(4).y - shape.part(3).y
+    drawLine(draw, im, (shape.part(6).x+shape.part(7).x)/2, m*(shape.part(6).x+shape.part(7).x)/2+b, (shape.part(6).x+shape.part(7).x)/2, m*(shape.part(6).x+shape.part(7).x)/2 + b+ neck_height, (0,0,0,255))
+    y_pos = m*(shape.part(6).x+shape.part(7).x)/2 + b+ neck_height
+    m = ((shape.part(8).y)+(shape.part(9).y-shape.part(8).y)/6- (shape.part(11).y+shape.part(10).y)/2) / float((shape.part(8).x)+(shape.part(9).x-shape.part(8).x)/6 - (shape.part(11).x + shape.part(10).x)/2)
+    b = (shape.part(11).y+shape.part(10).y)/2 - m*(shape.part(11).x + shape.part(10).x)/2
+
+    drawLine(draw, im, (shape.part(9).x+shape.part(10).x)/2, m*(shape.part(9).x+shape.part(10).x)/2+b, (shape.part(9).x+shape.part(10).x)/2, y_pos, (0,0,0,255))
+  
+    # drawLine(draw, im, (shape.part(6).x+shape.part(7).x)/2, (shape.part(6).y+shape.part(7).y)/2, (shape.part(6).x+shape.part(7).x)/2, (shape.part(6).y+shape.part(7).y)/2 + neck_height, (0,0,0,255))
+    # drawLine(draw, im, (shape.part(10).x+shape.part(9).x)/2, (shape.part(10).y+shape.part(9).y)/2, (shape.part(10).x+shape.part(9).x)/2, (shape.part(10).y+shape.part(9).y)/2 + neck_height, (0,0,0,255))
+    
 
     return im
+ 
+def draw_mouth(im, shape, draw):
+    # Need to shrink mouth horizontally (in between eyes), check if open smile/frown/etc
+
+    # use height of nose as threshold
+    threshold = shape.part(33).y - shape.part(31).y
+
+    anime_mouth_width = shape.part(42).x - shape.part(39).x 
+    real_mouth_width = shape.part(64).x - shape.part(60).x
+    ratio = float(anime_mouth_width)/real_mouth_width * float(3)/4
+
+    center_x = (shape.part(62).x + shape.part(66).x)/2
+    center_y = (shape.part(62).y + shape.part(66).y)/2
+
+    shift_x = center_x - (shape.part(62).x*ratio + shape.part(66).x*ratio)/float(2)
+    shift_y = center_y - (shape.part(62).y*ratio + shape.part(66).y*ratio)/float(2)
+
+
+    mouth_height = shape.part(66).y - shape.part(62).y 
+    if mouth_height > threshold:
+        line_range = range(61,68)
+        drawLine(draw, im, shape.part(60).x * ratio + shift_x, shape.part(60).y * ratio + shift_y,
+                 shape.part(67).x * ratio + shift_x, shape.part(67).y * ratio + shift_y, (0,0,0,255))
+    else: 
+        line_range = range(61,65)
+
+    prev_x = shape.part(60).x * ratio + shift_x
+    prev_y = shape.part(60).y * ratio + shift_y
+    for i in line_range: 
+        if i != 62:
+            drawLine(draw, im, prev_x, prev_y, shape.part(i).x * ratio + shift_x, shape.part(i).y * ratio + shift_y, (0,0,0,255))
+            prev_x = shape.part(i).x * ratio + shift_x
+            prev_y = shape.part(i).y * ratio + shift_y
+    
+    return im
+
+
 
 def predict_shape(fname):
     detector = dlib.get_frontal_face_detector()

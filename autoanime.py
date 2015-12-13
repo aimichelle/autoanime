@@ -1,5 +1,6 @@
 #!/usr/bin/python
 
+import cv2
 import sys
 import os
 import math
@@ -7,6 +8,10 @@ import dlib
 import glob
 from skimage import io
 from PIL import Image, ImageDraw
+import numpy as np
+from scipy.cluster.vq import kmeans,vq
+from pylab import imread,imshow,show
+
 
 MODEL = "shape_predictor_68_face_landmarks.dat"
 
@@ -16,15 +21,59 @@ def autoanime(fname):
     orig_im = Image.open(fname)
     new_im = Image.new("RGB", (orig_im.size[0], orig_im.size[1]), color=(255,255,255))
 
-    # test = orig_im.resize((orig_im.size[0]/100, orig_im.size[1]/100))
-    # test = orig_im.resize((orig_im.size[0]*100, orig_im.size[1]*100))
-    # test.save("test_resize.png", "PNG")
+    skin_color = quantize_skin(fname,shape)
+
+    new_im = color_skin(new_im, shape, skin_color)
+    
+    
+
     # Draw outline
     new_im = draw_lineart(new_im, shape)
-    # new_im = draw_lineart(orig_im, shape)
 
     # Save image
     new_im.save("test.png", "PNG")
+
+def color_skin(im, shape, colors):
+    # Find darkest and lightest color using luminance
+    if (0.2126*colors[0][0] + 0.7152*colors[0][1] + 0.0722*colors[0][2]) > (0.2126*colors[1][0] + 0.7152*colors[1][1] + 0.0722*colors[1][2]):
+        base_idx = 0
+    else:
+        base_idx = 1
+    draw = ImageDraw.Draw(im)
+
+    # face
+    draw.polygon([(shape.part(0).x, shape.part(0).y),
+                  (shape.part(3).x, shape.part(3).y),
+                  ((shape.part(4).x + shape.part(3).x)/2, (shape.part(4).y+shape.part(3).y)/2),
+                  (shape.part(5).x, shape.part(5).y),
+                  ((shape.part(5).x + shape.part(6).x)/2, (shape.part(5).y+shape.part(6).y)/2),
+                  ((shape.part(8).x)+(shape.part(7).x-shape.part(8).x)/6, (shape.part(8).y)+(shape.part(7).y-shape.part(8).y)/6),
+                  (shape.part(8).x, shape.part(8).y),
+                  ((shape.part(8).x)+(shape.part(9).x-shape.part(8).x)/6,  (shape.part(8).y)+(shape.part(9).y-shape.part(8).y)/6),
+                  ((shape.part(11).x + shape.part(10).x)/2, (shape.part(11).y+shape.part(10).y)/2),
+                  (shape.part(11).x, shape.part(11).y),
+                  ((shape.part(13).x + shape.part(12).x)/2, (shape.part(13).y+shape.part(12).y)/2),
+                  (shape.part(13).x, shape.part(13).y),
+                  (shape.part(16).x, shape.part(16).y)], (int(colors[base_idx][0]),int(colors[base_idx][1]),int(colors[base_idx][2])))
+    # neck 
+    neck_height = shape.part(4).y - shape.part(3).y
+    m = ((shape.part(8).y)+(shape.part(7).y-shape.part(8).y)/6- (shape.part(5).y+shape.part(6).y)/2) / float((shape.part(8).x)+(shape.part(7).x-shape.part(8).x)/6 - (shape.part(5).x + shape.part(6).x)/2)
+    b = (shape.part(5).y+shape.part(6).y)/2 - m*(shape.part(5).x + shape.part(6).x)/2
+    draw.polygon([((shape.part(6).x+shape.part(7).x)/2, m*(shape.part(6).x+shape.part(7).x)/2+b),((shape.part(6).x+shape.part(7).x)/2, m*(shape.part(6).x+shape.part(7).x)/2 + b+ neck_height),
+                  ((shape.part(9).x+shape.part(10).x)/2, m*(shape.part(6).x+shape.part(7).x)/2 + b+ neck_height), ((shape.part(9).x+shape.part(10).x)/2,shape.part(11).y)],
+                   (int(colors[base_idx][0]),int(colors[base_idx][1]),int(colors[base_idx][2])))
+
+    # nose
+    nose_height = (shape.part(33).y - shape.part(30).y)/float(5) 
+    draw.polygon([(shape.part(33).x, (shape.part(33).y+shape.part(30).y)/2), (shape.part(33).x+nose_height/3, (shape.part(33).y+shape.part(30).y)/2-nose_height/2), 
+                    ((shape.part(33).x) - nose_height/1, (shape.part(33).y+shape.part(30).y)/2 - nose_height)],
+                 (int(colors[not base_idx][0]),int(colors[not base_idx][1]),int(colors[not base_idx][2])))
+  
+    return im
+
+
+
+
 
 def draw_lineart(im, shape):
     draw = ImageDraw.Draw(im)
@@ -97,8 +146,16 @@ def draw_mouth(im, shape, draw):
     mouth_height = shape.part(66).y - shape.part(62).y 
     if mouth_height > threshold:
         line_range = range(61,68)
+        pts = []
+        for i in range(60,68):
+            if i != 62:
+                pts.append((shape.part(i).x*ratio + shift_x, shape.part(i).y*ratio+shift_y))
+        pts[0] = (pts[0][0] + 3,pts[0][1])
+        draw.polygon(pts,(255,255,255))
         drawLine(draw, im, shape.part(60).x * ratio + shift_x, shape.part(60).y * ratio + shift_y,
                  shape.part(67).x * ratio + shift_x, shape.part(67).y * ratio + shift_y, (0,0,0,255))
+        
+
     else: 
         line_range = range(61,65)
 
@@ -124,6 +181,15 @@ def predict_shape(fname):
     for k, d in enumerate(dets): # should only detect one face
         shape = predictor(img, d)
         return shape
+
+def quantize_skin(fname, shape):
+    img = imread(fname)
+    img = np.double(img)
+    img = img[shape.part(1).y: shape.part(4).y, shape.part(4).x:shape.part(12).x]
+
+    pixel = np.reshape(img,(img.shape[0]*img.shape[1],3))         
+    centroids,_ = kmeans(pixel,2)
+    return centroids
 
 #################################### IMPLEMENTATION OF XIAOLIN WU'S LINE ALGORITHM FOR ANTI-ALIASING ####################################
 

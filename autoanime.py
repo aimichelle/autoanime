@@ -42,7 +42,7 @@ def autoanime(fname):
     print "lineart done! now starting eyes..."
 
     ## eyes ##
-    new_im = process_eyes(shape, orig_im, new_im)
+    #new_im = process_eyes(shape, orig_im, new_im)
     print "eyes done!"
 
     ## eyebrows ##
@@ -143,34 +143,35 @@ def color_skin(im, shape, colors):
 
 def draw_lineart(im, shape):
     draw = ImageDraw.Draw(im)
+    s_width = 2
 
     # Draw sides of face
-    drawLine(draw, im, shape.part(0).x, shape.part(0).y, shape.part(3).x, shape.part(3).y, (0,0,0,255) )
-    drawLine(draw, im, shape.part(13).x, shape.part(13).y, shape.part(16).x, shape.part(16).y, (0,0,0,255))
+    drawLineWithStroke(s_width, draw, im, shape.part(0).x, shape.part(0).y, shape.part(3).x, shape.part(3).y, (0,0,0,255) )
+    drawLineWithStroke(s_width, draw, im, shape.part(13).x, shape.part(13).y, shape.part(16).x, shape.part(16).y, (0,0,0,255))
 
     # Draw cheeks
-    drawLine(draw, im, shape.part(3).x, shape.part(3).y, (shape.part(4).x + shape.part(3).x)/2, (shape.part(4).y+shape.part(3).y)/2, (0,0,0,255))
-    drawLine(draw, im, shape.part(5).x, shape.part(5).y, (shape.part(3).x + shape.part(4).x)/2, (shape.part(4).y+shape.part(3).y)/2, (0,0,0,255)) 
+    drawLineWithStroke(s_width, draw, im, shape.part(3).x, shape.part(3).y, (shape.part(4).x + shape.part(3).x)/2, (shape.part(4).y+shape.part(3).y)/2, (0,0,0,255))
+    drawLineWithStroke(s_width, draw, im, shape.part(5).x, shape.part(5).y, (shape.part(3).x + shape.part(4).x)/2, (shape.part(4).y+shape.part(3).y)/2, (0,0,0,255)) 
 
-    drawLine(draw, im, shape.part(13).x, shape.part(13).y, (shape.part(13).x + shape.part(12).x)/2, (shape.part(13).y+shape.part(12).y)/2, (0,0,0,255))
-    drawLine(draw, im, shape.part(11).x, shape.part(11).y, (shape.part(13).x + shape.part(12).x)/2, (shape.part(13).y+shape.part(12).y)/2, (0,0,0,255))   
+    drawLineWithStroke(s_width, draw, im, shape.part(13).x, shape.part(13).y, (shape.part(13).x + shape.part(12).x)/2, (shape.part(13).y+shape.part(12).y)/2, (0,0,0,255))
+    drawLineWithStroke(s_width, draw, im, shape.part(11).x, shape.part(11).y, (shape.part(13).x + shape.part(12).x)/2, (shape.part(13).y+shape.part(12).y)/2, (0,0,0,255))   
     # drawLine(draw, im, shape.part(3).x, shape.part(3).y, shape.part(5).x, shape.part(5).y, (0,0,0,255)) ##
     # drawLine(draw, im, shape.part(13).x, shape.part(13).y, shape.part(11).x, shape.part(11).y, (0,0,0,255)) ##
 
     # Draw chin
-    drawLine(draw, im, shape.part(5).x, shape.part(5).y, (shape.part(5).x + shape.part(6).x)/2, (shape.part(5).y+shape.part(6).y)/2, (0,0,0,255))
-    drawLine(draw, im, (shape.part(8).x)+(shape.part(7).x-shape.part(8).x)/6, (shape.part(8).y)+(shape.part(7).y-shape.part(8).y)/6, (shape.part(5).x + shape.part(6).x)/2, (shape.part(5).y+shape.part(6).y)/2, (0,0,0,255))  
-    drawLine(draw, im, (shape.part(8).x)+(shape.part(7).x-shape.part(8).x)/6,  (shape.part(8).y)+(shape.part(7).y-shape.part(8).y)/6, shape.part(8).x, shape.part(8).y, (0,0,0,255))  
+    drawLineWithStroke(s_width, draw, im, shape.part(5).x, shape.part(5).y, (shape.part(5).x + shape.part(6).x)/2, (shape.part(5).y+shape.part(6).y)/2, (0,0,0,255))
+    drawLineWithStroke(s_width, draw, im, (shape.part(8).x)+(shape.part(7).x-shape.part(8).x)/6, (shape.part(8).y)+(shape.part(7).y-shape.part(8).y)/6, (shape.part(5).x + shape.part(6).x)/2, (shape.part(5).y+shape.part(6).y)/2, (0,0,0,255))  
+    drawLineWithStroke(s_width, draw, im, (shape.part(8).x)+(shape.part(7).x-shape.part(8).x)/6,  (shape.part(8).y)+(shape.part(7).y-shape.part(8).y)/6, shape.part(8).x, shape.part(8).y, (0,0,0,255))  
     
-    drawLine(draw, im, shape.part(11).x, shape.part(11).y, (shape.part(11).x + shape.part(10).x)/2, (shape.part(11).y+shape.part(10).y)/2, (0,0,0,255))
-    drawLine(draw, im, (shape.part(8).x)+(shape.part(9).x-shape.part(8).x)/6, (shape.part(8).y)+(shape.part(9).y-shape.part(8).y)/6, (shape.part(11).x + shape.part(10).x)/2, (shape.part(11).y+shape.part(10).y)/2, (0,0,0,255))  
-    drawLine(draw, im, (shape.part(8).x)+(shape.part(9).x-shape.part(8).x)/6,  (shape.part(8).y)+(shape.part(9).y-shape.part(8).y)/6, shape.part(8).x, shape.part(8).y, (0,0,0,255))  
+    drawLineWithStroke(s_width, draw, im, shape.part(11).x, shape.part(11).y, (shape.part(11).x + shape.part(10).x)/2, (shape.part(11).y+shape.part(10).y)/2, (0,0,0,255))
+    drawLineWithStroke(s_width, draw, im, (shape.part(8).x)+(shape.part(9).x-shape.part(8).x)/6, (shape.part(8).y)+(shape.part(9).y-shape.part(8).y)/6, (shape.part(11).x + shape.part(10).x)/2, (shape.part(11).y+shape.part(10).y)/2, (0,0,0,255))  
+    drawLineWithStroke(s_width, draw, im, (shape.part(8).x)+(shape.part(9).x-shape.part(8).x)/6,  (shape.part(8).y)+(shape.part(9).y-shape.part(8).y)/6, shape.part(8).x, shape.part(8).y, (0,0,0,255))  
     # drawLine(draw, im, shape.part(5).x, shape.part(5).y, shape.part(8).x, shape.part(8).y, (0,0,0,255)) ## 
     # drawLine(draw, im, shape.part(11).x, shape.part(11).y, shape.part(8).x, shape.part(8).y, (0,0,0,255)) ##
 
     # draw nose (for female)
     nose_height = (shape.part(33).y - shape.part(30).y)/float(5)
-    drawLine(draw, im, shape.part(33).x, (shape.part(33).y+shape.part(30).y)/2, (shape.part(33).x) - nose_height/1, (shape.part(33).y+shape.part(30).y)/2 - nose_height, (0,0,0,255))
+    drawLineWithStroke(s_width, draw, im, shape.part(33).x, (shape.part(33).y+shape.part(30).y)/2, (shape.part(33).x) - nose_height/1, (shape.part(33).y+shape.part(30).y)/2 - nose_height, (0,0,0,255))
 
     im = draw_mouth(im, shape, draw)
 
@@ -179,12 +180,12 @@ def draw_lineart(im, shape):
     b = (shape.part(5).y+shape.part(6).y)/2 - m*(shape.part(5).x + shape.part(6).x)/2
     
     neck_height = shape.part(4).y - shape.part(3).y
-    drawLine(draw, im, (shape.part(6).x+shape.part(7).x)/2, m*(shape.part(6).x+shape.part(7).x)/2+b, (shape.part(6).x+shape.part(7).x)/2, m*(shape.part(6).x+shape.part(7).x)/2 + b+ neck_height, (0,0,0,255))
+    drawLineWithStroke(s_width, draw, im, (shape.part(6).x+shape.part(7).x)/2, m*(shape.part(6).x+shape.part(7).x)/2+b, (shape.part(6).x+shape.part(7).x)/2, m*(shape.part(6).x+shape.part(7).x)/2 + b+ neck_height, (0,0,0,255))
     y_pos = m*(shape.part(6).x+shape.part(7).x)/2 + b+ neck_height
     m = ((shape.part(8).y)+(shape.part(9).y-shape.part(8).y)/6- (shape.part(11).y+shape.part(10).y)/2) / float((shape.part(8).x)+(shape.part(9).x-shape.part(8).x)/6 - (shape.part(11).x + shape.part(10).x)/2)
     b = (shape.part(11).y+shape.part(10).y)/2 - m*(shape.part(11).x + shape.part(10).x)/2
 
-    drawLine(draw, im, (shape.part(9).x+shape.part(10).x)/2, m*(shape.part(9).x+shape.part(10).x)/2+b, (shape.part(9).x+shape.part(10).x)/2, y_pos, (0,0,0,255))
+    drawLineWithStroke(s_width, draw, im, (shape.part(9).x+shape.part(10).x)/2, m*(shape.part(9).x+shape.part(10).x)/2+b, (shape.part(9).x+shape.part(10).x)/2, y_pos, (0,0,0,255))
   
     # drawLine(draw, im, (shape.part(6).x+shape.part(7).x)/2, (shape.part(6).y+shape.part(7).y)/2, (shape.part(6).x+shape.part(7).x)/2, (shape.part(6).y+shape.part(7).y)/2 + neck_height, (0,0,0,255))
     # drawLine(draw, im, (shape.part(10).x+shape.part(9).x)/2, (shape.part(10).y+shape.part(9).y)/2, (shape.part(10).x+shape.part(9).x)/2, (shape.part(10).y+shape.part(9).y)/2 + neck_height, (0,0,0,255))
@@ -218,7 +219,7 @@ def draw_mouth(im, shape, draw):
                 pts.append((shape.part(i).x*ratio + shift_x, shape.part(i).y*ratio+shift_y))
         pts[0] = (pts[0][0] + 3,pts[0][1])
         draw.polygon(pts,(255,255,255))
-        drawLine(draw, im, shape.part(60).x * ratio + shift_x, shape.part(60).y * ratio + shift_y,
+        drawLineWithStroke(1, draw, im, shape.part(60).x * ratio + shift_x, shape.part(60).y * ratio + shift_y,
                  shape.part(67).x * ratio + shift_x, shape.part(67).y * ratio + shift_y, (0,0,0,255))
         
 
@@ -229,7 +230,7 @@ def draw_mouth(im, shape, draw):
     prev_y = shape.part(60).y * ratio + shift_y
     for i in line_range: 
         if i != 62:
-            drawLine(draw, im, prev_x, prev_y, shape.part(i).x * ratio + shift_x, shape.part(i).y * ratio + shift_y, (0,0,0,255))
+            drawLineWithStroke(1, draw, im, prev_x, prev_y, shape.part(i).x * ratio + shift_x, shape.part(i).y * ratio + shift_y, (0,0,0,255))
             prev_x = shape.part(i).x * ratio + shift_x
             prev_y = shape.part(i).y * ratio + shift_y
     
@@ -446,6 +447,43 @@ def quantize_skin(fname, shape):
     pixel = np.reshape(img,(img.shape[0]*img.shape[1],3))         
     centroids,_ = kmeans(pixel,2)
     return centroids
+
+
+# wrapper to draw thicker lines #
+def drawLineWithStroke(thickness, draw, img, x1, y1, x2, y2, col):
+    """wrapper to drawLine which calls it multiple times for thicker stroke widths.
+        thickness = 0 -> normal thin line 
+        thickness = 1 -> medium
+        thickness = 2 -> big
+    """
+    if thickness == 0:
+        drawLine(draw, img, x1, y1, x2, y2, col)
+    if thickness == 1:
+        drawLine(draw, img, x1, y1, x2, y2, col)
+        drawLine(draw, img, x1-1, y1, x2-1, y2, col)
+        drawLine(draw, img, x1+1, y1, x2+1, y2, col)
+        drawLine(draw, img, x1, y1-1, x2, y2-1, col)
+        drawLine(draw, img, x1, y1+1, x2, y2+1, col)
+    if thickness == 2: #eyebrows!
+        drawLine(draw, img, x1, y1, x2, y2, col)
+        drawLine(draw, img, x1-1, y1, x2-1, y2, col)
+        drawLine(draw, img, x1+1, y1, x2+1, y2, col)
+        drawLine(draw, img, x1, y1-1, x2, y2-1, col)
+        drawLine(draw, img, x1, y1+1, x2, y2+1, col)
+
+        drawLine(draw, img, x1-1, y1-1, x2-1, y2-1, col)
+        drawLine(draw, img, x1+1, y1-1, x2+1, y2-1, col)
+        drawLine(draw, img, x1+1, y1-1, x2+1, y2-1, col)
+        drawLine(draw, img, x1-1, y1+1, x2-1, y2+1, col)
+
+        drawLine(draw, img, x1-2, y1, x2-2, y2, col)
+        drawLine(draw, img, x1+2, y1, x2+2, y2, col)
+        drawLine(draw, img, x1, y1-2, x2, y2-2, col)
+        drawLine(draw, img, x1, y1+2, x2, y2+2, col)       
+    else:
+        print 'invalid thickness specified for drawLine!'
+
+
 
 #################################### IMPLEMENTATION OF XIAOLIN WU'S LINE ALGORITHM FOR ANTI-ALIASING ####################################
 

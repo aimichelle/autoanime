@@ -88,7 +88,7 @@ for f in glob.glob(os.path.join(faces_folder_path, "*.jpg")):
                                                   shape.part(1)))
         # Draw the face landmarks on the screen.
 
-        im = Image.open("../examples/faces/Nguyen_Michelle.jpg")
+        im = Image.open("me.jpg")
         draw = ImageDraw.Draw(im)
         prev_x = shape.part(0).x
         prev_y = shape.part(0).y
@@ -108,21 +108,21 @@ for f in glob.glob(os.path.join(faces_folder_path, "*.jpg")):
         draw.line([shape.part(56).x, shape.part(56).y, shape.part(57).x,shape.part(57).y], width=1)
         draw.line([shape.part(57).x, shape.part(57).y, shape.part(58).x,shape.part(58).y], width=1)
 
-        # draw.line([shape.part(50).x, shape.part(50).y, shape.part(51).x,shape.part(51).y], width=1)
-        # draw.line([shape.part(51).x, shape.part(51).y, shape.part(52).x,shape.part(52).y], width=1)
+        draw.line([shape.part(50).x, shape.part(50).y, shape.part(51).x,shape.part(51).y], width=1)
+        draw.line([shape.part(51).x, shape.part(51).y, shape.part(52).x,shape.part(52).y], width=1)
 
         draw.line([shape.part(31).x, shape.part(31).y, shape.part(33).x,shape.part(33).y], width=1)
         draw.line([shape.part(33).x, shape.part(33).y, shape.part(35).x,shape.part(35).y], width=1)
-        # draw.line([shape.part(0).x, shape.part(0).y, shape.part(3).x, shape.part(3).y],width=1)
-        # draw.line([shape.part(3).x, shape.part(3).y, shape.part(5).x, shape.part(5).y],width=1)
-        # draw.line([shape.part(5).x, shape.part(5).y, shape.part(8).x, shape.part(8).y],width=1)
-        # draw.line([shape.part(8).x, shape.part(8).y, shape.part(11).x, shape.part(11).y],width=1)
-        # draw.line([shape.part(11).x, shape.part(11).y, shape.part(13).x, shape.part(13).y],width=1)
-        # draw.line([shape.part(13).x, shape.part(13).y, shape.part(16).x, shape.part(16).y],width=1)
-        # for i in range(68):
-        #     draw.point([shape.part(i).x, shape.part(i).y])
+        draw.line([shape.part(0).x, shape.part(0).y, shape.part(3).x, shape.part(3).y],width=1)
+        draw.line([shape.part(3).x, shape.part(3).y, shape.part(5).x, shape.part(5).y],width=1)
+        draw.line([shape.part(5).x, shape.part(5).y, shape.part(8).x, shape.part(8).y],width=1)
+        draw.line([shape.part(8).x, shape.part(8).y, shape.part(11).x, shape.part(11).y],width=1)
+        draw.line([shape.part(11).x, shape.part(11).y, shape.part(13).x, shape.part(13).y],width=1)
+        draw.line([shape.part(13).x, shape.part(13).y, shape.part(16).x, shape.part(16).y],width=1)
+        for i in range(68):
+            draw.point([shape.part(i).x, shape.part(i).y])
         im.save("test.png", "PNG")
-        # win.add_overlay(shape)
+        win.add_overlay(shape)
     
     # win.add_overlay(dets)
     # dlib.hit_enter_to_continue()

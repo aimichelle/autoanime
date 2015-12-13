@@ -46,23 +46,20 @@ def autoanime(fname):
     print "eyes done!"
 
     ## eyebrows ##
-    process_eyebrows(shape, orig_im)
+    new_im = process_eyebrows(shape, orig_im, new_im)
     print "eyebrows done!"
 
     # Save image
     new_im.save("test-2.png", "PNG")
 
-def process_eyebrows(shape, orig_im):
+def process_eyebrows(shape, orig_im, new_im):
     """wrapper for processing eyebrows"""
     left, right = find_eyebrows(shape, orig_im)
     print "found eyebrows!"
     are_they_bushy = render_big_eyebrows(left, right)
     print 'should we be drawing bushy eyebrows? ', are_they_bushy
-    #if !are_they_bushy: #draw normally
-        #blah code here, but for now it's after the comments
-    #else: 
-        #figure out big line width
-    #how does drawline work, michelle?
+    new_im = draw_eyebrows(shape, new_im, are_they_bushy)
+    return new_im
 
 def process_eyes(shape, orig_im, new_im):
     """wrapper for eye functions"""
@@ -137,8 +134,28 @@ def color_skin(im, shape, colors):
   
     return im
 
+def draw_eyebrows(shape, im, bushy):
+    '''draws eyebrows'''    
+    draw = ImageDraw.Draw(im)
 
+    l_eyebrow = [shape.part(17),shape.part(18),shape.part(19),shape.part(20),shape.part(21)]
+    r_eyebrow = [shape.part(22),shape.part(23),shape.part(24),shape.part(25),shape.part(26)]
+    if not bushy: #draw lines
+        for i in xrange(len(l_eyebrow)-1):
+           drawLineWithStroke(2, draw, im, l_eyebrow[i].x, l_eyebrow[i].y, l_eyebrow[i+1].x, l_eyebrow[i+1].y, (0,0,0,255) )
+           drawLineWithStroke(2, draw, im, r_eyebrow[i].x, r_eyebrow[i].y, r_eyebrow[i+1].x, r_eyebrow[i+1].y, (0,0,0,255) )
+    else: #draw polygon
+        #left eye
+        xy_left = []
+        xy_right = []
+        for i in xrange(len(l_eyebrow)):
+           xy_left.append((l_eyebrow[i].x, l_eyebrow[i].y))
+           xy_right.append((r_eyebrow[i].x, r_eyebrow[i].y))
 
+        draw.polygon(xy_left, (0,0,0), (0,0,0)) #TODO: fill (first one) is hair color
+        draw.polygon(xy_right, (0,0,0), (0,0,0))
+
+    return im
 
 
 def draw_lineart(im, shape):
@@ -458,13 +475,13 @@ def drawLineWithStroke(thickness, draw, img, x1, y1, x2, y2, col):
     """
     if thickness == 0:
         drawLine(draw, img, x1, y1, x2, y2, col)
-    if thickness == 1:
+    elif thickness == 1:
         drawLine(draw, img, x1, y1, x2, y2, col)
         drawLine(draw, img, x1-1, y1, x2-1, y2, col)
         drawLine(draw, img, x1+1, y1, x2+1, y2, col)
         drawLine(draw, img, x1, y1-1, x2, y2-1, col)
         drawLine(draw, img, x1, y1+1, x2, y2+1, col)
-    if thickness == 2: #eyebrows!
+    elif thickness == 2:
         drawLine(draw, img, x1, y1, x2, y2, col)
         drawLine(draw, img, x1-1, y1, x2-1, y2, col)
         drawLine(draw, img, x1+1, y1, x2+1, y2, col)

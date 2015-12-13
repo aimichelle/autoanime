@@ -16,6 +16,9 @@ from scipy import signal
 MODEL = "shape_predictor_68_face_landmarks.dat"
 DEBUG_PRINT = False
 
+#As a note, I think the optimal input size is about 500x700.
+#Not sure if it works with lower quality than that. Lol.
+
 def autoanime(fname):
     shape = predict_shape(fname)
 
@@ -34,14 +37,30 @@ def autoanime(fname):
     new_im = process_eyes(shape, orig_im, new_im)
     print "eyes done!"
 
+    ## eyebrows ##
+    process_eyebrows(shape, orig_im)
+    print "eyebrows done!"
+
     # Save image
     new_im.save("test-2.png", "PNG")
 
+def process_eyebrows(shape, orig_im):
+    """wrapper for processing eyebrows"""
+    left, right = find_eyebrows(shape, orig_im)
+    print "found eyebrows!"
+    are_they_bushy = render_big_eyebrows(left, right)
+    print 'should we be drawing bushy eyebrows? ', are_they_bushy
+    #if !are_they_bushy: #draw normally
+        #blah code here, but for now it's after the comments
+    #else: 
+        #figure out big line width
+    #how does drawline work, michelle?
+
 def process_eyes(shape, orig_im, new_im):
-    """wrapper for line functions"""
+    """wrapper for eye functions"""
     left, right = crop_eyes(shape, orig_im)
     left_r, right_r = resize(left, right)
-    print "now matching (long)..."
+    print "now matching eyes (it takes a min or two)..."
     left_a, right_a = match_anime(left_r, right_r)
 
     #paste eye
@@ -176,7 +195,6 @@ def dist(p1,p2):
 
 def crop_wrapper(x, y, x_plus, y_plus, im):
     """crops image centered at (x,y) by (x_plus, y_plus) in each direction."""
-    print "xplus, yplus: ", x_plus, y_plus
     return im.crop((x-x_plus, y-y_plus, x+x_plus, y+y_plus))
 
 def find_eyebrows(shape, orig_im):
@@ -217,30 +235,27 @@ def render_big_eyebrows(left, right):
     energy_l = abs(l_gradient[0]) 
     energy_r = abs(r_gradient[0]) 
     
-    plt.imshow(energy_l,  cmap=cm.Greys_r)
-    plt.show()
-    plt.imshow(left)
-    plt.show()
-    plt.imshow(energy_r,  cmap=cm.Greys_r)
-    plt.show()
-    plt.imshow(right)
-    plt.show()
+    if DEBUG_PRINT:
+        plt.imshow(energy_l,  cmap=cm.Greys_r)
+        plt.show()
+        plt.imshow(left)
+        plt.show()
+        plt.imshow(energy_r,  cmap=cm.Greys_r)
+        plt.show()
+        plt.imshow(right)
+        plt.show()
     
     h, w = energy_l.shape
     mid_h = h / 2
     #not sure about these thresholds
     cropped_l = energy_l[mid_h-(h/4):mid_h+(h/4), :]
     cropped_r = energy_r[mid_h-(h/4):mid_h+(h/4), :]
-    
-    plt.imshow(cropped_l,  cmap=cm.Greys_r)
-    plt.show()
-    plt.imshow(cropped_r,  cmap=cm.Greys_r)
-    plt.show()
+
     
     s_l = cropped_l.sum() / (cropped_l.shape[0] * cropped_l.shape[1]) 
     s_r = cropped_r.sum() / (cropped_r.shape[0] * cropped_r.shape[1])
-    fin_avg = (s_l + s_r) / 2. 
-    #print 'finall! ', fin_avg
+    fin = (s_l + s_r) / 2. 
+    print 'eyebrow energy was ', fin
     if fin < 0.02:
         return False
     else:
@@ -331,8 +346,20 @@ def match_anime(left_r, right_r):
     #returns anime eyes...
     if (i_l != i_r):
         print "uh oh, anime eyes don't match..."
-    left_anime = Image.open('eyes/anime/'+left_files[i_l])
-    right_anime = Image.open('eyes/anime/'+right_files[i_r])
+        print "left: ", left_files[i_l], " right: ", right_files[i_r]
+        left_score = np.amax([ncc.max() for ncc in left_scores])
+        right_score = np.amax([ncc.max() for ncc in left_scores])
+        if left_score > right_score:
+            print "using left eye for both."
+            left_anime = Image.open('eyes/anime/'+left_files[i_l])
+            right_anime = Image.open('eyes/anime/'+right_files[i_l])
+        else:
+            print "using right eye for both."
+            left_anime = Image.open('eyes/anime/'+left_files[i_r])
+            right_anime = Image.open('eyes/anime/'+right_files[i_r])
+    else:
+        left_anime = Image.open('eyes/anime/'+left_files[i_l])
+        right_anime = Image.open('eyes/anime/'+right_files[i_r])
 
     if DEBUG_PRINT:
         print left_files[i_l]

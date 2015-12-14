@@ -36,37 +36,36 @@ def autoanime(fname):
 
     shape = predict_shape(fname)
     
-    #fname = 'matthew.png'
-    orig_im = Image.open('matthew.png')
+    orig_im = Image.open(fname)
     new_im = orig_im
 
-    # new_im = Image.new("RGB", (orig_im.size[0], orig_im.size[1]), color=(255,255,255))
+    new_im = Image.new("RGB", (orig_im.size[0], orig_im.size[1]), color=(255,255,255))
 
     skin_color = quantize_skin(fname,shape)
 
-    # new_im = color_skin(new_im, shape, skin_color)
+    new_im = color_skin(new_im, shape, skin_color)
     
     
 
-    # # Draw outline
-    # new_im = draw_lineart(new_im, shape, skin_color)
+    # Draw outline
+    new_im = draw_lineart(new_im, shape, skin_color)
 
-    # new_im = draw_forehead(new_im, shape, skin_color)
+    new_im = draw_forehead(new_im, shape, skin_color)
 
-    # print "lineart done! now starting eyes..."
+    print "lineart done! now starting eyes..."
 
-    # ## eyes ##
-    # new_im = process_eyes(shape, orig_im, new_im)
+    ## eyes ##
+    new_im = process_eyes(shape, orig_im, new_im)
  
-    # print "eyes done!"
+    print "eyes done!"
 
-    # ## eyebrows ##
-    # new_im = process_eyebrows(shape, orig_im, new_im)
-    # print "eyebrows done!"
+    ## eyebrows ##
+    new_im = process_eyebrows(shape, orig_im, new_im)
+    print "eyebrows done!"
 
-    # ## and the hardest part...hair##
-    # angle = get_hair_angle(shape)
-    # print "we will need to rotate by ", angle , "deg cc"
+    ## and the hardest part...hair##
+    angle = get_hair_angle(shape)
+    print "we will need to rotate by ", angle , "deg cc"
     
     #if short hair, add ears
     new_im = add_ears(shape, new_im, skin_color)
@@ -367,7 +366,7 @@ def add_ears(shape, im, colors):
     else:
         base_idx = 1 #baseidx is the lighter color.
     ear_color = colors[base_idx]
-    print 'rgb color is ', ear_color
+    #print 'rgb color is ', ear_color
     ear_color = [c/255. for c in ear_color]
     ear_color_hsv = colorsys.rgb_to_hsv(ear_color[0], ear_color[1], ear_color[2])
     print 'hsv color is ', ear_color_hsv
@@ -379,7 +378,7 @@ def add_ears(shape, im, colors):
     right_ear = colorize(right_ear, hue)
 
     left_angle, right_angle = get_ear_angles(shape)
-    print 'rotating left ', left_angle, ' and right ', right_angle
+    print 'rotating left ear', left_angle, ' and right ear', right_angle
     left_ear = left_ear.rotate(left_angle, resample=Image.BICUBIC, expand = 1)
     right_ear = right_ear.rotate(right_angle, resample=Image.BICUBIC, expand = 1)
 

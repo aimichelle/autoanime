@@ -43,18 +43,22 @@ def autoanime(fname):
 
     new_im = Image.new("RGB", (orig_im.size[0], orig_im.size[1]), color=(255,255,255))
 
+    #hair
     mask = hair_detection.get_hair_mask(fname)
     long_hair = hair_detection.long_hair(mask,shape)
     # hair_file = hair_detection.match_hair(mask, shape, long_hair, GENDER)
 
     hair_color = hair_detection.hair_color(shape,fname)
 
-    # if "ncc" in hair_file:
-    #     new_im = hair_detection.draw_long_hair(shape,hair_file,new_im)
+
+    if "ncc" in hair_file:
+        print "we have long hair."
+        new_im = hair_detection.draw_long_hair(shape,hair_file,new_im,hair_color)
+
 
     skin_color = quantize_skin(fname,shape)
-
     new_im = color_skin(new_im, shape, skin_color)
+    print "first half hair done!"
     
     
     # Draw outline
@@ -76,16 +80,22 @@ def autoanime(fname):
     print "ears done!"
 
 
-    ## and the hardest part...hair##
+    #draw the rest of the hair
     angle = hair_detection.get_hair_angle(shape)
+
     
-    # new_im = hair_detection.draw_hair(shape, hair_file, new_im, angle)
+
+    new_im = hair_detection.draw_hair(shape, hair_file, new_im, angle, hair_color)
     if detect_glasses(fname,shape):
         draw_glasses(new_im, shape, GENDER)
 
 
 
+    
 
+
+    print "hair all done!"
+    print "finished! check the folder for a saved PNG."
     # Save image
     new_im.save("test.png", "PNG")
 
@@ -185,8 +195,8 @@ def process_eyes(shape, orig_im, new_im):
         l_anime_eye_resized.show()
         r_anime_eye_resized.show()
 
-    new_im.paste(l_anime_eye_resized, box=((lx - new_l_w/2 - new_l_w/12, int(ly-new_l_h/4))), mask=l_anime_eye_resized)
-    new_im.paste(r_anime_eye_resized, box=((rx - new_r_w/2 + new_r_w/12, int(ry-new_r_h/4))), mask=r_anime_eye_resized)
+    new_im.paste(l_anime_eye_resized, box=((lx - new_l_w/2 - new_l_w/12, int(ly-new_l_h/9))), mask=l_anime_eye_resized)
+    new_im.paste(r_anime_eye_resized, box=((rx - new_r_w/2 + new_r_w/12, int(ry-new_r_h/9))), mask=r_anime_eye_resized)
 
     return new_im
 

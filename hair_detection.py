@@ -37,8 +37,8 @@ def draw_long_hair(shapes,hair_file,im):
     ratio = -face_width/400.
 
     if "ncc" in hair_file:
-        hair_idx = hair_file[4]
-        hair_file = hair_idx + "-l.png"
+        hair_idx = hair_file[-7]
+        hair_file = "hair/"+hair_idx + "-l.png"
 
     hair_im = Image.open(hair_file)
     pt_0 = ((hair_im.size[0]/2. - 200)*ratio, 410*ratio) 
@@ -55,8 +55,8 @@ def draw_hair(shapes,hair_file,im):
     ratio = -face_width/400.
 
     if "ncc" in hair_file:
-        hair_idx = hair_file[4]
-        hair_file = hair_idx + "-s-f.png"
+        hair_idx = hair_file[-7]
+        hair_file = "hair/"+hair_idx + "-s-f.png"
 
     hair_im = Image.open(hair_file)
     pt_0 = ((hair_im.size[0]/2. - 200)*ratio, 410*ratio) 

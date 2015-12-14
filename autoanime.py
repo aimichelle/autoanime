@@ -44,12 +44,12 @@ def autoanime(fname):
 
     mask = hair_detection.get_hair_mask(fname)
     long_hair = hair_detection.long_hair(mask,shape)
-    hair_file = hair_detection.match_hair(mask, shape, long_hair, GENDER)
+    # hair_file = hair_detection.match_hair(mask, shape, long_hair, GENDER)
 
     hair_color = hair_detection.hair_color(shape,fname)
 
-    if long_hair:
-        new_im = hair_detection.draw_long_hair(shape,hair_file,new_im)
+    # if "ncc" in hair_file:
+    #     new_im = hair_detection.draw_long_hair(shape,hair_file,new_im)
 
     skin_color = quantize_skin(fname,shape)
 
@@ -64,7 +64,7 @@ def autoanime(fname):
     print "lineart done! now starting eyes..."
 
     ## eyes ##
-    new_im = process_eyes(shape, orig_im, new_im)
+    # new_im = process_eyes(shape, orig_im, new_im)
  
 
     new_im = process_eyebrows(shape, orig_im, new_im)
@@ -81,7 +81,7 @@ def autoanime(fname):
 
 
     
-    new_im = hair_detection.draw_hair(shape, hair_file, new_im)
+    # new_im = hair_detection.draw_hair(shape, hair_file, new_im)
 
     # Save image
     new_im.save("test.png", "PNG")
@@ -177,24 +177,28 @@ def color_skin(im, shape, colors):
     b = (shape.part(5).y+shape.part(6).y)/2 - m*(shape.part(5).x + shape.part(6).x)/2
     draw.polygon([((shape.part(6).x+shape.part(7).x)/2, m*(shape.part(6).x+shape.part(7).x)/2+b),((shape.part(6).x+shape.part(7).x)/2, m*(shape.part(6).x+shape.part(7).x)/2 + b+ neck_height),
                   ((shape.part(9).x+shape.part(10).x)/2, m*(shape.part(6).x+shape.part(7).x)/2 + b+ neck_height), ((shape.part(9).x+shape.part(10).x)/2,shape.part(11).y)],
-                   (int(colors[base_idx][0]),int(colors[base_idx][1]),int(colors[base_idx][2])))
+                  (int(colors[base_idx][0]),int(colors[base_idx][1]),int(colors[base_idx][2])))
+
     # neck shadow
-    draw.polygon([((shape.part(5).x + shape.part(6).x)/2, (shape.part(5).y+shape.part(6).y)/2+neck_height/4.),
-                  ((shape.part(8).x)+(shape.part(7).x-shape.part(8).x)/6, (shape.part(8).y)+(shape.part(7).y-shape.part(8).y)/6+neck_height/4.),
-                  (shape.part(8).x, shape.part(8).y+neck_height/4.),
-                  ((shape.part(8).x)+(shape.part(9).x-shape.part(8).x)/6,  (shape.part(8).y)+(shape.part(9).y-shape.part(8).y)/6+neck_height/4.),
-                  ((shape.part(11).x + shape.part(10).x)/2, (shape.part(11).y+shape.part(10).y)/2+neck_height/4.)],
-                  (int(colors[not base_idx][0]),int(colors[not base_idx][1]),int(colors[not base_idx][2])))
+    draw.polygon([((shape.part(6).x+shape.part(7).x)/2, m*(shape.part(6).x+shape.part(7).x)/2+b),((shape.part(6).x+shape.part(7).x)/2, m*(shape.part(6).x+shape.part(7).x)/2 + b+ neck_height/1.7),
+                  ((shape.part(9).x+shape.part(10).x)/2, m*(shape.part(6).x+shape.part(7).x)/2 + b+ neck_height/1.7), ((shape.part(9).x+shape.part(10).x)/2,shape.part(11).y)],  
+                (int(colors[not base_idx][0]),int(colors[not base_idx][1]),int(colors[not base_idx][2])))
+    # draw.polygon([((shape.part(5).x + shape.part(6).x)/2, (shape.part(5).y+shape.part(6).y)/2+neck_height/4.),
+    #               ((shape.part(8).x)+(shape.part(7).x-shape.part(8).x)/6, (shape.part(8).y)+(shape.part(7).y-shape.part(8).y)/6+neck_height/4.),
+    #               (shape.part(8).x, shape.part(8).y+neck_height/4.),
+    #               ((shape.part(8).x)+(shape.part(9).x-shape.part(8).x)/6,  (shape.part(8).y)+(shape.part(9).y-shape.part(8).y)/6+neck_height/4.),
+    #               ((shape.part(11).x + shape.part(10).x)/2, (shape.part(11).y+shape.part(10).y)/2+neck_height/4.)],
+    #               (int(colors[not base_idx][0]),int(colors[not base_idx][1]),int(colors[not base_idx][2])))
 
-    draw.polygon([((shape.part(6).x+shape.part(7).x)/2, m*(shape.part(6).x+shape.part(7).x)/2+b-neck_height),
-                    ((shape.part(6).x+shape.part(7).x)/2, m*(shape.part(6).x+shape.part(7).x)/2 + b+ neck_height),
-                    ((shape.part(6).x+shape.part(7).x)/2-100, m*(shape.part(6).x+shape.part(7).x)/2+b+neck_height),
-                    ((shape.part(6).x+shape.part(7).x)/2-100, m*(shape.part(6).x+shape.part(7).x)/2+b-neck_height)], (255,255,255))
+    # draw.polygon([((shape.part(6).x+shape.part(7).x)/2, m*(shape.part(6).x+shape.part(7).x)/2+b-neck_height),
+    #                 ((shape.part(6).x+shape.part(7).x)/2, m*(shape.part(6).x+shape.part(7).x)/2 + b+ neck_height),
+    #                 ((shape.part(6).x+shape.part(7).x)/2-100, m*(shape.part(6).x+shape.part(7).x)/2+b+neck_height),
+    #                 ((shape.part(6).x+shape.part(7).x)/2-100, m*(shape.part(6).x+shape.part(7).x)/2+b-neck_height)], (255,255,255))
 
-    draw.polygon([((shape.part(9).x+shape.part(10).x)/2, m*(shape.part(6).x+shape.part(7).x)/2 + b-neck_height),
-                ((shape.part(9).x+shape.part(10).x)/2, m*(shape.part(6).x+shape.part(7).x)/2 + b+ neck_height),
-                ((shape.part(9).x+shape.part(10).x)/2+100, m*(shape.part(6).x+shape.part(7).x)/2 + b+ neck_height),
-                ((shape.part(9).x+shape.part(10).x)/2+100, m*(shape.part(6).x+shape.part(7).x)/2 + b-neck_height)], (255,255,255))
+    # draw.polygon([((shape.part(9).x+shape.part(10).x)/2, m*(shape.part(6).x+shape.part(7).x)/2 + b-neck_height),
+    #             ((shape.part(9).x+shape.part(10).x)/2, m*(shape.part(6).x+shape.part(7).x)/2 + b+ neck_height),
+    #             ((shape.part(9).x+shape.part(10).x)/2+100, m*(shape.part(6).x+shape.part(7).x)/2 + b+ neck_height),
+    #             ((shape.part(9).x+shape.part(10).x)/2+100, m*(shape.part(6).x+shape.part(7).x)/2 + b-neck_height)], (255,255,255))
 
     # face
     draw.polygon([(shape.part(0).x, shape.part(0).y),

@@ -33,34 +33,38 @@ def autoanime(fname):
         fname = "test_resize.jpg"
 
     shape = predict_shape(fname)
+    
+    fname = 'matthew.png'
     orig_im = Image.open(fname)
-    new_im = Image.new("RGB", (orig_im.size[0], orig_im.size[1]), color=(255,255,255))
+    new_im = orig_im
 
-    skin_color = quantize_skin(fname,shape)
+    # new_im = Image.new("RGB", (orig_im.size[0], orig_im.size[1]), color=(255,255,255))
 
-    new_im = color_skin(new_im, shape, skin_color)
+    # skin_color = quantize_skin(fname,shape)
+
+    # new_im = color_skin(new_im, shape, skin_color)
     
     
 
-    # Draw outline
-    new_im = draw_lineart(new_im, shape, skin_color)
+    # # Draw outline
+    # new_im = draw_lineart(new_im, shape, skin_color)
 
-    new_im = draw_forehead(new_im, shape, skin_color)
+    # new_im = draw_forehead(new_im, shape, skin_color)
 
-    print "lineart done! now starting eyes..."
+    # print "lineart done! now starting eyes..."
 
-    ## eyes ##
-    new_im = process_eyes(shape, orig_im, new_im)
+    # ## eyes ##
+    # new_im = process_eyes(shape, orig_im, new_im)
  
-    print "eyes done!"
+    # print "eyes done!"
 
-    ## eyebrows ##
-    new_im = process_eyebrows(shape, orig_im, new_im)
-    print "eyebrows done!"
+    # ## eyebrows ##
+    # new_im = process_eyebrows(shape, orig_im, new_im)
+    # print "eyebrows done!"
 
-    ## and the hardest part...hair##
-    angle = get_hair_angle(shape)
-    print "we will need to rotate by ", angle , "deg cc"
+    # ## and the hardest part...hair##
+    # angle = get_hair_angle(shape)
+    # print "we will need to rotate by ", angle , "deg cc"
     
     #if short hair, add ears
     new_im = add_ears(shape, new_im)
@@ -374,10 +378,24 @@ def add_ears(shape, im):
     new_rw, new_rh = right_ear.size
     print new_lw, new_lh
 
-    im.paste(left_ear, box=((shape.part(0).x-new_lw+new_lw/8, shape.part(17).y+new_lh/5)), mask=left_ear)
-    im.paste(right_ear, box=((shape.part(16).x-new_rw/3, shape.part(26).y+new_lh/6)), mask=right_ear)
+    #reverse paste for layers!
+    #make mask out of original image
+    mask = np.asarray(im)
+    mask.setflags(write=True)
+    mask[mask == 255] = 69
+    mask[mask != 69] = 255
+    mask[mask == 69] = 0
+    
+    mask_im = Image.fromarray(np.uint8(mask)).convert('L')
 
-    return im
+    new_im = Image.new("RGB", (mask_im.size[0], mask_im.size[1]), color=(255,255,255))
+
+    new_im.paste(left_ear, box=((shape.part(0).x-new_lw+new_lw/8, shape.part(17).y+new_lh/5)), mask=left_ear)
+    new_im.paste(right_ear, box=((shape.part(16).x-new_rw/3, shape.part(26).y+new_lh/6)), mask=right_ear)
+
+    new_im.paste(im, box=((0,0)), mask=mask_im)
+
+    return new_im
 
 
 def predict_shape(fname):

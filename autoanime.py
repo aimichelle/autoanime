@@ -19,6 +19,7 @@ import colorsys
 
 MODEL = "shape_predictor_68_face_landmarks.dat"
 DEBUG_PRINT = False
+GENDER = 'none'
 
 #As a note, I think the optimal input size is about 500x700.
 #Not sure if it works with lower quality than that. Lol.
@@ -50,6 +51,8 @@ def autoanime(fname):
     print "lineart done! now starting eyes..."
     ## eyes ##
     # new_im = process_eyes(shape, orig_im, new_im)
+    new_im = process_eyes(shape, orig_im, new_im)
+
     print "eyes done!"
 
 
@@ -97,16 +100,24 @@ def process_eyes(shape, orig_im, new_im):
 
     #paste eye
     left_e_w, left_e_h = left.size
-    left_e_w = int(left_e_w*1.25) #haha expand eye
+    left_e_w, left_e_h = int(left_e_w*1.25), int(left_e_h*1.25) #haha expand eye
 
     right_e_w, right_e_h = right.size
-    right_e_w = int(right_e_w*1.25) 
+    right_e_w, right_e_h = int(right_e_w*1.25), int(right_e_h*1.25) 
 
     lratio = 200./left_e_w
-    l_anime_eye_resized = left_a.resize((left_e_w, int(left_e_h*lratio)) , resample=Image.BICUBIC)
+    l_anime_eye_resized = left_a.resize((left_e_w, int(200./lratio)) , resample=Image.BICUBIC)
 
     rratio = 200./right_e_w
-    r_anime_eye_resized = right_a.resize((right_e_w, int(right_e_h*rratio)) , resample=Image.BICUBIC)
+    r_anime_eye_resized = right_a.resize((right_e_w, int(200./rratio)) , resample=Image.BICUBIC)
+
+    if DEBUG_PRINT:
+        print 'original left eye: ', left.size
+        print 'original right eye: ', right.size
+        print 'l/r ratio: ', lratio, rratio
+        print 'new left anime size: ', left_e_w, left_e_h*lratio
+        print 'new right anime size: ', right_e_w, right_e_h*rratio
+        print 'left proportion (should be 1)', left_e_w/(left_e_h*lratio)
 
     ly = (shape.part(37).y + shape.part(38).y)/2
     lx = (shape.part(37).x + shape.part(38).x)/2
@@ -117,9 +128,12 @@ def process_eyes(shape, orig_im, new_im):
     new_l_w, new_l_h = l_anime_eye_resized.size
     new_r_w, new_r_h = r_anime_eye_resized.size
 
+    if DEBUG_PRINT:
+        l_anime_eye_resized.show()
+        r_anime_eye_resized.show()
 
-    new_im.paste(l_anime_eye_resized, box=((lx - new_l_w/2 - new_l_w/12, int(ly-new_l_h/3.5))), mask=l_anime_eye_resized)
-    new_im.paste(r_anime_eye_resized, box=((rx - new_r_w/2 + new_r_w/12, int(ry-new_r_h/3.5))), mask=r_anime_eye_resized)
+    new_im.paste(l_anime_eye_resized, box=((lx - new_l_w/2 - new_l_w/12, int(ly-new_l_h/4))), mask=l_anime_eye_resized)
+    new_im.paste(r_anime_eye_resized, box=((rx - new_r_w/2 + new_r_w/12, int(ry-new_r_h/4))), mask=r_anime_eye_resized)
 
     return new_im
 
@@ -391,15 +405,15 @@ def render_big_eyebrows(left, right):
     energy_l = abs(l_gradient[0]) 
     energy_r = abs(r_gradient[0]) 
     
-    if DEBUG_PRINT:
-        plt.imshow(energy_l,  cmap=cm.Greys_r)
-        plt.show()
-        plt.imshow(left)
-        plt.show()
-        plt.imshow(energy_r,  cmap=cm.Greys_r)
-        plt.show()
-        plt.imshow(right)
-        plt.show()
+    # if DEBUG_PRINT:
+    #     plt.imshow(energy_l,  cmap=cm.Greys_r)
+    #     plt.show()
+    #     plt.imshow(left)
+    #     plt.show()
+    #     plt.imshow(energy_r,  cmap=cm.Greys_r)
+    #     plt.show()
+    #     plt.imshow(right)
+    #     plt.show()
     
     h, w = energy_l.shape
     mid_h = h / 2
@@ -484,16 +498,30 @@ def match_anime(left_r, right_r):
             l_temp_bw = rgb2gray(l_temp)
             l_norm = (l_temp_bw - l_temp_bw.mean()) / l_temp_bw.std()
             ncc = signal.correlate2d(left_r_normed, l_norm, mode='same')
+            if GENDER == 'f':
+                if 'f' in filename:
+                    ncc *= 1.1
+            if GENDER == 'm':
+                if 'm' in filename:
+                    ncc *= 1.1
             left_scores.append(ncc)
-            #print filename, ' has a score of ', ncc.max()
+            if DEBUG_PRINT:
+                print filename, ' has a score of ', ncc.max()
         if "r" in filename:
             right_files.append(filename)
             r_temp = plt.imread('eyes/real/'+filename)
             r_temp_bw = rgb2gray(r_temp)
             r_norm = (r_temp_bw - r_temp_bw.mean()) / r_temp_bw.std()
             ncc = signal.correlate2d(right_r_normed, r_norm, mode='same')
+            if GENDER == 'f':
+                if 'f' in filename:
+                    ncc *= 1.1
+            if GENDER == 'm':
+                if 'm' in filename:
+                    ncc *= 1.1
             right_scores.append(ncc)
-            #print filename, ' has a score of ', ncc.max()     
+            if DEBUG_PRINT:
+                print filename, ' has a score of ', ncc.max()     
 
     #hopefully they both match...        
     i_l = np.argmax([ncc.max() for ncc in left_scores])
@@ -505,6 +533,7 @@ def match_anime(left_r, right_r):
         print "left: ", left_files[i_l], " right: ", right_files[i_r]
         left_score = np.amax([ncc.max() for ncc in left_scores])
         right_score = np.amax([ncc.max() for ncc in left_scores])
+        print "left score, right score: ", left_score, right_score
         if left_score > right_score:
             print "using left eye for both."
             left_anime = Image.open('eyes/anime/'+left_files[i_l])
@@ -521,7 +550,7 @@ def match_anime(left_r, right_r):
         print left_files[i_l]
         print right_files[i_r]
 
-        print 'the is are ', i_l, i_r
+        print 'the i\'s are ', i_l, i_r
         image_l = plt.imread('eyes/real/'+left_files[i_l])
         image_r = plt.imread('eyes/real/'+right_files[i_r])
         plt.imshow(left_r)
@@ -653,6 +682,10 @@ def drawLine(draw, img, x1, y1, x2, y2, col):
 
 if __name__ == "__main__":
     if len(sys.argv) == 2:
+        autoanime(sys.argv[1])
+    elif len(sys.argv) == 4:
+        GENDER = sys.argv[3]
+        print "starting with gender ", GENDER 
         autoanime(sys.argv[1])
     else:
         print("Correct usage: ./autoanime file")

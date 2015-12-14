@@ -21,6 +21,8 @@ import hair_detection
 MODEL = "shape_predictor_68_face_landmarks.dat"
 DEBUG_PRINT = False
 GENDER = 'none'
+rgb_to_hsv = np.vectorize(colorsys.rgb_to_hsv)
+hsv_to_rgb = np.vectorize(colorsys.hsv_to_rgb)
 
 #As a note, I think the optimal input size is about 500x700.
 #Not sure if it works with lower quality than that. Lol.
@@ -45,31 +47,26 @@ def autoanime(fname):
     new_im = color_skin(new_im, shape, skin_color)
     
     
-
-    # # Draw outline
+    # Draw outline
     new_im = draw_lineart(new_im, shape, skin_color)
 
     new_im = draw_forehead(new_im, shape, skin_color)
 
-
     print "lineart done! now starting eyes..."
 
-
-    # ## eyes ##
+    ## eyes ##
     new_im = process_eyes(shape, orig_im, new_im)
  
-    print "eyes done!"
 
-    # ## eyebrows ##
     new_im = process_eyebrows(shape, orig_im, new_im)
     print "eyebrows done!"
 
-    # ## and the hardest part...hair##
-    # angle = get_hair_angle(shape)
-    # print "we will need to rotate by ", angle , "deg cc"
+    ## and the hardest part...hair##
+    angle = get_hair_angle(shape)
+    print "we will need to rotate by ", angle , "deg cc"
     
     #if short hair, add ears
-    new_im = add_ears(shape, new_im)
+    new_im = add_ears(shape, new_im, skin_color)
 
     # hair
 
@@ -163,7 +160,7 @@ def color_skin(im, shape, colors):
     if (0.2126*colors[0][0] + 0.7152*colors[0][1] + 0.0722*colors[0][2]) > (0.2126*colors[1][0] + 0.7152*colors[1][1] + 0.0722*colors[1][2]):
         base_idx = 0
     else:
-        base_idx = 1
+        base_idx = 1 #baseidx is the lighter color.
     draw = ImageDraw.Draw(im)
 
      # neck 
@@ -368,15 +365,28 @@ def draw_mouth(im, shape, draw, colors):
     draw.polygon(pts, shadow)
     return im
 
-def add_ears(shape, im):
+def add_ears(shape, im, colors):
+    if (0.2126*colors[0][0] + 0.7152*colors[0][1] + 0.0722*colors[0][2]) > (0.2126*colors[1][0] + 0.7152*colors[1][1] + 0.0722*colors[1][2]):
+        base_idx = 0
+    else:
+        base_idx = 1 #baseidx is the lighter color.
+    ear_color = colors[base_idx]
+    #print 'rgb color is ', ear_color
+    ear_color = [c/255. for c in ear_color]
+    ear_color_hsv = colorsys.rgb_to_hsv(ear_color[0], ear_color[1], ear_color[2])
+    print 'hsv color is ', ear_color_hsv
+    hue = ear_color_hsv[0] * 360
+    #change color
     left_ear = Image.open('ears/left.png')
     right_ear = Image.open('ears/right.png')
+    left_ear = colorize(left_ear, hue)
+    right_ear = colorize(right_ear, hue)
+
     left_angle, right_angle = get_ear_angles(shape)
-    print 'rotating left ', left_angle, ' and right ', right_angle
+    print 'rotating left ear', left_angle, ' and right ear', right_angle
     left_ear = left_ear.rotate(left_angle, resample=Image.BICUBIC, expand = 1)
     right_ear = right_ear.rotate(right_angle, resample=Image.BICUBIC, expand = 1)
 
-    #TODO: CHANGE SKIN COLOR
     left_height = abs(shape.part(17).y - shape.part(2).y)
     right_height = abs(shape.part(26).y - shape.part(14).y)
     lw, lh = left_ear.size
@@ -396,9 +406,7 @@ def add_ears(shape, im):
     mask[mask != 255] = 0
     kernel = np.ones((1,1),np.uint8)
     dilation = cv2.dilate(mask,kernel,iterations = 2)
-
     mask_im = Image.fromarray(np.uint8(dilation)).convert('L')
-    mask_im.show()
 
     new_im = Image.new("RGB", (mask_im.size[0], mask_im.size[1]), color=(255,255,255))
 
@@ -787,6 +795,28 @@ def drawLine(draw, img, x1, y1, x2, y2, col):
         plot (draw, img, x, ipart (intery), rfpart (intery),col, steep)
         plot (draw, img, x, ipart (intery) + 1, fpart (intery),col, steep)
         intery = intery + gradient
+
+
+# hue shifting code courtesy of http://stackoverflow.com/questions/7274221/changing-image-hue-with-python-pil
+def shift_hue(arr, hout):
+    r, g, b, a = np.rollaxis(arr, axis=-1)
+    h, s, v = rgb_to_hsv(r, g, b)
+    h = hout
+    r, g, b = hsv_to_rgb(h, s, v)
+    arr = np.dstack((r, g, b, a))
+    return arr
+
+def colorize(image, hue):
+    """
+    Colorize PIL image `original` with the given
+    `hue` (hue within 0-360); returns another PIL image.
+    """
+    img = image.convert('RGBA')
+    arr = np.array(np.asarray(img).astype('float'))
+    new_img = Image.fromarray(shift_hue(arr, hue/360.).astype('uint8'), 'RGBA')
+
+    return new_img
+
 
 if __name__ == "__main__":
     if len(sys.argv) == 2:

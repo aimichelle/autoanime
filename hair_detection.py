@@ -89,7 +89,7 @@ def draw_hair(shapes,hair_file,im, angle, color):
     print color 
     if color[0] < 55 and color[1] < 55 and color[2] < 55: #black hair
         #black hair, greyscale it.
-        hair_im = hair_im.convert('L')
+        hair_im = hair_im.convert('LA')
         print 'hair turned to black'
     else:
         color_hsv = colorsys.rgb_to_hsv(color[0], color[1], color[2])

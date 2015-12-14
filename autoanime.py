@@ -16,6 +16,7 @@ from scipy import signal
 from scipy.cluster.vq import kmeans,vq
 from pylab import imread,imshow,show
 import colorsys
+import hair_detection
 
 MODEL = "shape_predictor_68_face_landmarks.dat"
 DEBUG_PRINT = False
@@ -25,6 +26,7 @@ GENDER = 'none'
 #Not sure if it works with lower quality than that. Lol.
 
 def autoanime(fname):
+
     im = Image.open(fname)
     if (im.size[1] > 700):
         print "resizing"
@@ -51,7 +53,6 @@ def autoanime(fname):
     print "lineart done! now starting eyes..."
     ## eyes ##
     # new_im = process_eyes(shape, orig_im, new_im)
-    new_im = process_eyes(shape, orig_im, new_im)
 
     print "eyes done!"
 
@@ -60,8 +61,16 @@ def autoanime(fname):
     new_im = process_eyebrows(shape, orig_im, new_im)
     print "eyebrows done!"
 
+    # hair
+
+    mask = hair_detection.get_hair_mask(fname)
+    cv2.imwrite("mask.jpg",mask)
+
+    hair_detection.match_hair(mask, shape)
+    # print "Long hair?"
+    # print hair_detection.long_hair(mask, shape)
     # Save image
-    new_im.save("test-2.png", "PNG")
+    new_im.save("test.png", "PNG")
 
 
 def draw_forehead(im, shape, colors):

@@ -79,7 +79,7 @@ def match_hair(mask,shapes,long_hair,gender): # face width, img width/2 shapes.p
         # cv2.imwrite("resized_mask.jpg",im)
 
 def get_hair_mask(fname):
-    face_cascade = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
+    # face_cascade = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
 
     img = cv2.imread(fname)
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)

@@ -8,7 +8,7 @@ import os
 from scipy import signal
 from PIL import Image, ImageDraw
 
-def draw_hair(shapes,hair_file,im):
+def draw_hair(shapes,hair_file,im, angle):
     # resize hairfile
     face_width = shapes.part(0).x - shapes.part(16).x
     ratio = -face_width/400.
@@ -16,6 +16,11 @@ def draw_hair(shapes,hair_file,im):
     hair_im = Image.open(hair_file)
     pt_0 = ((hair_im.size[0]/2. - 200)*ratio, 410*ratio) 
     hair_im = hair_im.resize((int(hair_im.size[0]*ratio), int(hair_im.size[1]*ratio)),resample=Image.BICUBIC)
+    
+    #then rotate it
+    hair_im = hair_im.rotate(angle, resample=Image.BICUBIC, expand = 1)
+    print "we rotated the hair by ", angle
+
     shift_x = int(shapes.part(0).x - pt_0[0])
     shift_y = int(shapes.part(0).y - pt_0[1])
     im.paste(hair_im, box=(shift_x,shift_y), mask=hair_im)
@@ -23,6 +28,7 @@ def draw_hair(shapes,hair_file,im):
 
 def match_hair(mask,shapes,long_hair,gender): # face width, img width/2 shapes.part(0).x is to left by facewidth/2
     # resize mask so that 1 to 17 is 400, 410 pixels down  dont check lng hairs
+    print "matching hair..."
     face_width = shapes.part(0).x - shapes.part(16).x
     shift_x = mask.shape[1]/2 - shapes.part(0).x + face_width/2
     rows,cols = mask.shape
@@ -153,6 +159,17 @@ def get_hair_mask(fname):
     erosion = cv2.erode(dilation,kernel,iterations=2)
     
     return erosion
+
+
+def get_hair_angle(shape):
+    """returns how much we need to rotate the hair based on eye orientation."""
+    rise = abs(shape.part(36).y - shape.part(45).y)
+    run = abs(shape.part(36).x - shape.part(45).x)
+    angle = math.degrees(math.atan(float(rise/run)))
+    if shape.part(36).y > shape.part(45).y: #the left eye is higher, rotate clockwise
+        return 360 - angle
+    else:
+        return angle
 
 def long_hair(mask,shapes):
 

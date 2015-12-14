@@ -396,11 +396,14 @@ def add_ears(shape, im):
     #make mask out of original image
     mask = np.asarray(im)
     mask.setflags(write=True)
-    mask[mask == 255] = 69
-    mask[mask != 69] = 255
-    mask[mask == 69] = 0
-    
-    mask_im = Image.fromarray(np.uint8(mask)).convert('L')
+    mask[mask == 255] = 250
+    mask[mask != 250] = 255
+    mask[mask != 255] = 0
+    kernel = np.ones((1,1),np.uint8)
+    dilation = cv2.dilate(mask,kernel,iterations = 2)
+
+    mask_im = Image.fromarray(np.uint8(dilation)).convert('L')
+    mask_im.show()
 
     new_im = Image.new("RGB", (mask_im.size[0], mask_im.size[1]), color=(255,255,255))
 

@@ -24,8 +24,8 @@ GENDER = 'none'
 rgb_to_hsv = np.vectorize(colorsys.rgb_to_hsv)
 hsv_to_rgb = np.vectorize(colorsys.hsv_to_rgb)
 
-#As a note, I think the optimal input size is about 500x700.
-#Not sure if it works with lower quality than that. Lol.
+#As a note, I think the optimal input size is about 700x900.
+#Not sure if it works with lower quality than 500px wide due to eye resizing issues.
 
 def autoanime(fname):
 
@@ -58,30 +58,29 @@ def autoanime(fname):
     
     # Draw outline
     new_im = draw_lineart(new_im, shape, skin_color)
-
     new_im = draw_forehead(new_im, shape, skin_color)
-
     print "lineart done! now starting eyes..."
 
     ## eyes ##
-    # new_im = process_eyes(shape, orig_im, new_im)
- 
+
+    new_im = process_eyes(shape, orig_im, new_im)
+    print "eyes done!"
+
 
     new_im = process_eyebrows(shape, orig_im, new_im)
     print "eyebrows done!"
 
-    ## and the hardest part...hair##
-    angle = get_hair_angle(shape)
-    print "we will need to rotate by ", angle , "deg cc"
-    
-    #if short hair, add ears
+    #add ears
     new_im = add_ears(shape, new_im, skin_color)
+    print "ears done!"
 
-    # hair
 
-
+    ## and the hardest part...hair##
+    angle = hair_detection.get_hair_angle(shape)
+    mask = hair_detection.get_hair_mask(fname)
+    hair_file = hair_detection.match_hair(mask, shape, hair_detection.long_hair(mask,shape), GENDER)
+    new_im = hair_detection.draw_hair(shape, hair_file, new_im, angle)
     
-    # new_im = hair_detection.draw_hair(shape, hair_file, new_im)
 
     # Save image
     new_im.save("test.png", "PNG")
@@ -682,17 +681,6 @@ def get_ear_angles(shape):
     return -(left_angle-90), -(right_angle+90)
 
 
-
-def get_hair_angle(shape):
-    """returns how much we need to rotate the hair based on eye orientation."""
-    rise = abs(shape.part(36).y - shape.part(45).y)
-    run = abs(shape.part(36).x - shape.part(45).x)
-    print 'the slope is ', float(rise/run)
-    angle = math.degrees(math.atan(float(rise/run)))
-    if shape.part(36).y > shape.part(45).y: #the left eye is higher, rotate clockwise
-        return 360 - angle
-    else:
-        return angle
 
 def quantize_skin(fname, shape):
     img = imread(fname)

@@ -42,6 +42,15 @@ def autoanime(fname):
 
     new_im = Image.new("RGB", (orig_im.size[0], orig_im.size[1]), color=(255,255,255))
 
+    mask = hair_detection.get_hair_mask(fname)
+    long_hair = hair_detection.long_hair(mask,shape)
+    hair_file = hair_detection.match_hair(mask, shape, long_hair, GENDER)
+
+    hair_color = hair_detection.hair_color(shape,fname)
+
+    if long_hair:
+        new_im = hair_detection.draw_long_hair(shape,hair_file,new_im)
+
     skin_color = quantize_skin(fname,shape)
 
     new_im = color_skin(new_im, shape, skin_color)
@@ -63,12 +72,13 @@ def autoanime(fname):
     new_im = add_ears(shape, new_im, skin_color)
     print "ears done!"
 
+
     ## and the hardest part...hair##
     angle = hair_detection.get_hair_angle(shape)
     mask = hair_detection.get_hair_mask(fname)
     hair_file = hair_detection.match_hair(mask, shape, hair_detection.long_hair(mask,shape), GENDER)
     new_im = hair_detection.draw_hair(shape, hair_file, new_im, angle)
-
+    
     # Save image
     new_im.save("test.png", "PNG")
 

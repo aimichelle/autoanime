@@ -7,11 +7,56 @@ import autoanime
 import os
 from scipy import signal
 from PIL import Image, ImageDraw
+from scipy.cluster.vq import kmeans,vq
+import colorsys
+
+def hair_color(shapes, fname):
+
+    img = cv2.imread(fname)
+    img = img[shapes.part(20).y-(shapes.part(33).y - shapes.part(27).y)*1.5: shapes.part(20).y - (shapes.part(33).y - shapes.part(27).y)/4, shapes.part(0).x:shapes.part(16).x]
+    cv2.imwrite("cropped_hair.jpg",img)
+    i = Image.open("cropped_hair.jpg")
+    h = i.histogram()
+
+    r = h[0:256]
+    g = h[256:256*2]
+    b = h[256*2: 256*3]
+
+    r = sum( i*w for i, w in enumerate(r) ) / sum(r)
+    g = sum( i*w for i, w in enumerate(g) ) / sum(g)
+    b =  sum( i*w for i, w in enumerate(b) ) / sum(b)
+
+
+    h,l,s = colorsys.rgb_to_hls(r/255.,g/255., b/255.)
+    l = l + .1
+    r,g,b = colorsys.hls_to_rgb(h,l,s)
+    return (r*255,g*255,b*255)
+
+def draw_long_hair(shapes,hair_file,im):
+    face_width = shapes.part(0).x - shapes.part(16).x
+    ratio = -face_width/400.
+
+    if "ncc" in hair_file:
+        hair_idx = hair_file[4]
+        hair_file = hair_idx + "-l.png"
+
+    hair_im = Image.open(hair_file)
+    pt_0 = ((hair_im.size[0]/2. - 200)*ratio, 410*ratio) 
+    hair_im = hair_im.resize((int(hair_im.size[0]*ratio), int(hair_im.size[1]*ratio)),resample=Image.BICUBIC)
+    shift_x = int(shapes.part(0).x - pt_0[0])
+    shift_y = int(shapes.part(0).y - pt_0[1])
+    im.paste(hair_im, box=(shift_x,shift_y), mask=hair_im)
+    return im
+
 
 def draw_hair(shapes,hair_file,im, angle):
     # resize hairfile
     face_width = shapes.part(0).x - shapes.part(16).x
     ratio = -face_width/400.
+
+    if "ncc" in hair_file:
+        hair_idx = hair_file[4]
+        hair_file = hair_idx + "-s-f.png"
 
     hair_im = Image.open(hair_file)
     pt_0 = ((hair_im.size[0]/2. - 200)*ratio, 410*ratio) 
@@ -50,7 +95,7 @@ def match_hair(mask,shapes,long_hair,gender): # face width, img width/2 shapes.p
         if filename == '.DS_Store':
             continue
 
-        if (long_hair and "l" not in filename) or (not long_hair and "s" not in filename): 
+        if (long_hair and "ncc" not in filename) or (not long_hair and "s" not in filename): 
             continue               
         im = cv2.imread('hair/'+filename,0)
         im[im == 255] = 0

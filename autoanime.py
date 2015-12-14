@@ -45,7 +45,7 @@ def autoanime(fname):
     #hair
     mask = hair_detection.get_hair_mask(fname)
     long_hair = hair_detection.long_hair(mask,shape)
-    # hair_file = hair_detection.match_hair(mask, shape, long_hair, GENDER)
+    hair_file = hair_detection.match_hair(mask, shape, long_hair, GENDER)
 
     hair_color = hair_detection.hair_color(shape,fname)
 
@@ -68,8 +68,8 @@ def autoanime(fname):
     new_im = process_eyes(shape, orig_im, new_im)
     print "eyes done!"
 
-
-    new_im = process_eyebrows(shape, orig_im, new_im)
+    #eyebrows
+    new_im = process_eyebrows(shape, orig_im, new_im, hair_color)
     print "eyebrows done!"
 
     #add ears
@@ -105,13 +105,13 @@ def draw_forehead(im, shape, colors):
     draw.polygon(points, (int(colors[base_idx][0]),int(colors[base_idx][1]),int(colors[base_idx][2])))
     return im
 
-def process_eyebrows(shape, orig_im, new_im):
+def process_eyebrows(shape, orig_im, new_im, color):
     """wrapper for processing eyebrows"""
     left, right = find_eyebrows(shape, orig_im)
     print "found eyebrows!"
     are_they_bushy = render_big_eyebrows(left, right)
     print 'should we be drawing bushy eyebrows? ', are_they_bushy
-    new_im = draw_eyebrows(shape, new_im, are_they_bushy)
+    new_im = draw_eyebrows(shape, new_im, are_they_bushy, color)
     return new_im
 
 def process_eyes(shape, orig_im, new_im):
@@ -172,17 +172,17 @@ def color_skin(im, shape, colors):
     draw = ImageDraw.Draw(im)
 
      # neck 
-    neck_height = shape.part(4).y - shape.part(3).y +10
-    m = ((shape.part(8).y)+(shape.part(7).y-shape.part(8).y)/6- (shape.part(5).y+shape.part(6).y)/2) / float((shape.part(8).x)+(shape.part(7).x-shape.part(8).x)/6 - (shape.part(5).x + shape.part(6).x)/2)
-    b = (shape.part(5).y+shape.part(6).y)/2 - m*(shape.part(5).x + shape.part(6).x)/2
-    draw.polygon([((shape.part(6).x+shape.part(7).x)/2, m*(shape.part(6).x+shape.part(7).x)/2+b),((shape.part(6).x+shape.part(7).x)/2, m*(shape.part(6).x+shape.part(7).x)/2 + b+ neck_height),
-                  ((shape.part(9).x+shape.part(10).x)/2, m*(shape.part(6).x+shape.part(7).x)/2 + b+ neck_height), ((shape.part(9).x+shape.part(10).x)/2,shape.part(11).y)],
-                  (int(colors[base_idx][0]),int(colors[base_idx][1]),int(colors[base_idx][2])))
+    # neck_height = shape.part(4).y - shape.part(3).y +10
+    # m = ((shape.part(8).y)+(shape.part(7).y-shape.part(8).y)/6- (shape.part(5).y+shape.part(6).y)/2) / float((shape.part(8).x)+(shape.part(7).x-shape.part(8).x)/6 - (shape.part(5).x + shape.part(6).x)/2)
+    # b = (shape.part(5).y+shape.part(6).y)/2 - m*(shape.part(5).x + shape.part(6).x)/2
+    # draw.polygon([((shape.part(6).x+shape.part(7).x)/2, m*(shape.part(6).x+shape.part(7).x)/2+b),((shape.part(6).x+shape.part(7).x)/2, m*(shape.part(6).x+shape.part(7).x)/2 + b+ neck_height),
+    #               ((shape.part(9).x+shape.part(10).x)/2, m*(shape.part(6).x+shape.part(7).x)/2 + b+ neck_height), ((shape.part(9).x+shape.part(10).x)/2,shape.part(11).y)],
+    #               (int(colors[base_idx][0]),int(colors[base_idx][1]),int(colors[base_idx][2])))
 
-    # neck shadow
-    draw.polygon([((shape.part(6).x+shape.part(7).x)/2, m*(shape.part(6).x+shape.part(7).x)/2+b),((shape.part(6).x+shape.part(7).x)/2, m*(shape.part(6).x+shape.part(7).x)/2 + b+ neck_height/1.7),
-                  ((shape.part(9).x+shape.part(10).x)/2, m*(shape.part(6).x+shape.part(7).x)/2 + b+ neck_height/1.7), ((shape.part(9).x+shape.part(10).x)/2,shape.part(11).y)],  
-                (int(colors[not base_idx][0]),int(colors[not base_idx][1]),int(colors[not base_idx][2])))
+    # # neck shadow
+    # draw.polygon([((shape.part(6).x+shape.part(7).x)/2, m*(shape.part(6).x+shape.part(7).x)/2+b),((shape.part(6).x+shape.part(7).x)/2, m*(shape.part(6).x+shape.part(7).x)/2 + b+ neck_height/1.7),
+    #              ((shape.part(9).x+shape.part(10).x)/2, m*(shape.part(6).x+shape.part(7).x)/2 + b+ neck_height/1.7), ((shape.part(9).x+shape.part(10).x)/2,shape.part(11).y)],  
+    #            (int(colors[not base_idx][0]),int(colors[not base_idx][1]),int(colors[not base_idx][2])))
     # draw.polygon([((shape.part(5).x + shape.part(6).x)/2, (shape.part(5).y+shape.part(6).y)/2+neck_height/4.),
     #               ((shape.part(8).x)+(shape.part(7).x-shape.part(8).x)/6, (shape.part(8).y)+(shape.part(7).y-shape.part(8).y)/6+neck_height/4.),
     #               (shape.part(8).x, shape.part(8).y+neck_height/4.),
@@ -233,7 +233,7 @@ def color_skin(im, shape, colors):
   
     return im
 
-def draw_eyebrows(shape, im, bushy):
+def draw_eyebrows(shape, im, bushy, color):
     '''draws eyebrows'''    
     draw = ImageDraw.Draw(im)
 
@@ -250,8 +250,8 @@ def draw_eyebrows(shape, im, bushy):
            xy_left.append((l_eyebrow[i].x, l_eyebrow[i].y))
            xy_right.append((r_eyebrow[i].x, r_eyebrow[i].y))
 
-        draw.polygon(xy_left, (0,0,0), (0,0,0)) #TODO: fill (first one) is hair color
-        draw.polygon(xy_right, (0,0,0), (0,0,0))
+        draw.polygon(xy_left, (int(color[0]),int(color[1]),int(color[2])),  (int(color[0]),int(color[1]),int(color[2]))) 
+        draw.polygon(xy_right, (int(color[0]),int(color[1]),int(color[2])), (int(color[0]),int(color[1]),int(color[2])))
 
     return im
 
@@ -292,16 +292,16 @@ def draw_lineart(im, shape, colors):
     im = draw_mouth(im, shape, draw, colors)
 
     # Draw neck
-    m = ((shape.part(8).y)+(shape.part(7).y-shape.part(8).y)/6- (shape.part(5).y+shape.part(6).y)/2) / float((shape.part(8).x)+(shape.part(7).x-shape.part(8).x)/6 - (shape.part(5).x + shape.part(6).x)/2)
-    b = (shape.part(5).y+shape.part(6).y)/2 - m*(shape.part(5).x + shape.part(6).x)/2
+    # m = ((shape.part(8).y)+(shape.part(7).y-shape.part(8).y)/6- (shape.part(5).y+shape.part(6).y)/2) / float((shape.part(8).x)+(shape.part(7).x-shape.part(8).x)/6 - (shape.part(5).x + shape.part(6).x)/2)
+    # b = (shape.part(5).y+shape.part(6).y)/2 - m*(shape.part(5).x + shape.part(6).x)/2
     
-    neck_height = shape.part(4).y - shape.part(3).y + 10
-    drawLineWithStroke(s_width, draw, im, (shape.part(6).x+shape.part(7).x)/2, m*(shape.part(6).x+shape.part(7).x)/2+b, (shape.part(6).x+shape.part(7).x)/2, m*(shape.part(6).x+shape.part(7).x)/2 + b+ neck_height, (0,0,0,255))
-    y_pos = m*(shape.part(6).x+shape.part(7).x)/2 + b+ neck_height
-    m = ((shape.part(8).y)+(shape.part(9).y-shape.part(8).y)/6- (shape.part(11).y+shape.part(10).y)/2) / float((shape.part(8).x)+(shape.part(9).x-shape.part(8).x)/6 - (shape.part(11).x + shape.part(10).x)/2)
-    b = (shape.part(11).y+shape.part(10).y)/2 - m*(shape.part(11).x + shape.part(10).x)/2
+    # neck_height = shape.part(4).y - shape.part(3).y + 10
+    # drawLineWithStroke(s_width, draw, im, (shape.part(6).x+shape.part(7).x)/2, m*(shape.part(6).x+shape.part(7).x)/2+b, (shape.part(6).x+shape.part(7).x)/2, m*(shape.part(6).x+shape.part(7).x)/2 + b+ neck_height, (0,0,0,255))
+    # y_pos = m*(shape.part(6).x+shape.part(7).x)/2 + b+ neck_height
+    # m = ((shape.part(8).y)+(shape.part(9).y-shape.part(8).y)/6- (shape.part(11).y+shape.part(10).y)/2) / float((shape.part(8).x)+(shape.part(9).x-shape.part(8).x)/6 - (shape.part(11).x + shape.part(10).x)/2)
+    # b = (shape.part(11).y+shape.part(10).y)/2 - m*(shape.part(11).x + shape.part(10).x)/2
 
-    drawLineWithStroke(s_width, draw, im, (shape.part(9).x+shape.part(10).x)/2, m*(shape.part(9).x+shape.part(10).x)/2+b, (shape.part(9).x+shape.part(10).x)/2, y_pos, (0,0,0,255))
+    # drawLineWithStroke(s_width, draw, im, (shape.part(9).x+shape.part(10).x)/2, m*(shape.part(9).x+shape.part(10).x)/2+b, (shape.part(9).x+shape.part(10).x)/2, y_pos, (0,0,0,255))
   
     # drawLine(draw, im, (shape.part(6).x+shape.part(7).x)/2, (shape.part(6).y+shape.part(7).y)/2, (shape.part(6).x+shape.part(7).x)/2, (shape.part(6).y+shape.part(7).y)/2 + neck_height, (0,0,0,255))
     # drawLine(draw, im, (shape.part(10).x+shape.part(9).x)/2, (shape.part(10).y+shape.part(9).y)/2, (shape.part(10).x+shape.part(9).x)/2, (shape.part(10).y+shape.part(9).y)/2 + neck_height, (0,0,0,255))
@@ -807,7 +807,7 @@ def shift_hue(arr, hout):
     arr = np.dstack((r, g, b, a))
     return arr
 
-def colorize(image, hue):
+def colorize(image, hue, saturation):
     """
     Colorize PIL image `original` with the given
     `hue` (hue within 0-360); returns another PIL image.

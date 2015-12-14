@@ -80,6 +80,7 @@ def draw_hair(shapes,hair_file,im, angle, color):
         print 'hair turned to black'
     else:
         color_hsv = colorsys.rgb_to_hsv(color[0], color[1], color[2])
+        print 'hair hsv is ', color_hsv
         hue = color_hsv[0] * 360
         hair_im = autoanime.colorize(hair_im, hue)
         print 'colorized hair to hue ', hue

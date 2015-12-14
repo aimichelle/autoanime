@@ -48,8 +48,8 @@ def autoanime(fname):
 
     hair_color = hair_detection.hair_color(shape,fname)
 
-    # if "ncc" in hair_file:
-    #     new_im = hair_detection.draw_long_hair(shape,hair_file,new_im)
+    if "ncc" in hair_file:
+        new_im = hair_detection.draw_long_hair(shape,hair_file,new_im)
 
     skin_color = quantize_skin(fname,shape)
 
@@ -77,8 +77,7 @@ def autoanime(fname):
 
     ## and the hardest part...hair##
     angle = hair_detection.get_hair_angle(shape)
-    mask = hair_detection.get_hair_mask(fname)
-    hair_file = hair_detection.match_hair(mask, shape, hair_detection.long_hair(mask,shape), GENDER)
+    
     new_im = hair_detection.draw_hair(shape, hair_file, new_im, angle)
     
 

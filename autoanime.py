@@ -30,36 +30,50 @@ def autoanime(fname):
     im = Image.open(fname)
     if (im.size[1] > 700):
         print "resizing"
-        a = im.resize((int(im.size[0]*float(700)/im.size[1]), 700))
+        a = im.resize((int(im.size[0]*float(700)/im.size[1]), 700), resample=Image.BICUBIC)
         a.save("test_resize.jpg")
         fname = "test_resize.jpg"
+
     shape = predict_shape(fname)
-
+    
     orig_im = Image.open(fname)
-    new_im = Image.new("RGB", (orig_im.size[0], orig_im.size[1]), color=(255,255,255))
+    new_im = orig_im
 
-    skin_color = quantize_skin(fname,shape)
+    # new_im = Image.new("RGB", (orig_im.size[0], orig_im.size[1]), color=(255,255,255))
 
-    new_im = color_skin(new_im, shape, skin_color)
+    # skin_color = quantize_skin(fname,shape)
+
+    # new_im = color_skin(new_im, shape, skin_color)
     
     
 
-    # Draw outline
-    new_im = draw_lineart(new_im, shape, skin_color)
+    # # Draw outline
+    # new_im = draw_lineart(new_im, shape, skin_color)
 
-    new_im = draw_forehead(new_im, shape, skin_color)
+    # new_im = draw_forehead(new_im, shape, skin_color)
+
 
     # new_im = draw_lineart(orig_im, shape)
     print "lineart done! now starting eyes..."
     ## eyes ##
     # new_im = process_eyes(shape, orig_im, new_im)
 
-    print "eyes done!"
 
+    # ## eyes ##
+    # new_im = process_eyes(shape, orig_im, new_im)
+ 
+    # print "eyes done!"
 
-    ## eyebrows ##
-    new_im = process_eyebrows(shape, orig_im, new_im)
-    print "eyebrows done!"
+    # ## eyebrows ##
+    # new_im = process_eyebrows(shape, orig_im, new_im)
+    # print "eyebrows done!"
+
+    # ## and the hardest part...hair##
+    # angle = get_hair_angle(shape)
+    # print "we will need to rotate by ", angle , "deg cc"
+    
+    #if short hair, add ears
+    new_im = add_ears(shape, new_im)
 
     # hair
 
@@ -200,11 +214,13 @@ def color_skin(im, shape, colors):
 
     # nose
     pts = []
+    y_const = 15
+
     nose_height = (shape.part(33).y - shape.part(30).y)/float(5) 
-    pts.append( (shape.part(33).x - nose_height/1, (shape.part(33).y+shape.part(30).y)/2 - nose_height))
-    pts.append((shape.part(33).x, (shape.part(33).y + shape.part(30).y)/2.+nose_height/2))
+    pts.append( (shape.part(33).x - nose_height/1, (shape.part(33).y+shape.part(30).y)/2 - nose_height + y_const))
+    pts.append((shape.part(33).x, (shape.part(33).y + shape.part(30).y)/2.+nose_height/2 + y_const))
     # pts.append((shape.part(30).x, shape.part(30).y))
-    pts.append(((shape.part(34).x+shape.part(33).x)/2-nose_height*1.5, shape.part(30).y))
+    pts.append(((shape.part(34).x+shape.part(33).x)/2-nose_height*1.5, shape.part(30).y + y_const))
     
     # for i in range(33,36):
     #     pts.append((shape.part(i).x, shape.part(i).y))
@@ -221,10 +237,9 @@ def draw_eyebrows(shape, im, bushy):
     r_eyebrow = [shape.part(22),shape.part(23),shape.part(24),shape.part(25),shape.part(26)]
     if not bushy: #draw lines
         for i in xrange(len(l_eyebrow)-1):
-           drawLineWithStroke(2, draw, im, l_eyebrow[i].x, l_eyebrow[i].y, l_eyebrow[i+1].x, l_eyebrow[i+1].y, (0,0,0,255) )
-           drawLineWithStroke(2, draw, im, r_eyebrow[i].x, r_eyebrow[i].y, r_eyebrow[i+1].x, r_eyebrow[i+1].y, (0,0,0,255) )
+           drawLineWithStroke(1, draw, im, l_eyebrow[i].x, l_eyebrow[i].y, l_eyebrow[i+1].x, l_eyebrow[i+1].y, (0,0,0,255) )
+           drawLineWithStroke(1, draw, im, r_eyebrow[i].x, r_eyebrow[i].y, r_eyebrow[i+1].x, r_eyebrow[i+1].y, (0,0,0,255) )
     else: #draw polygon
-        #left eye
         xy_left = []
         xy_right = []
         for i in xrange(len(l_eyebrow)):
@@ -266,8 +281,9 @@ def draw_lineart(im, shape, colors):
     # drawLine(draw, im, shape.part(11).x, shape.part(11).y, shape.part(8).x, shape.part(8).y, (0,0,0,255)) ##
 
     # draw nose (for female)
+    move_down = 20
     nose_height = (shape.part(33).y - shape.part(30).y)/float(5)
-    drawLineWithStroke(s_width, draw, im, shape.part(33).x, (shape.part(33).y+shape.part(30).y)/2, (shape.part(33).x) - nose_height/1, (shape.part(33).y+shape.part(30).y)/2 - nose_height, (0,0,0,255))
+    drawLineWithStroke(s_width, draw, im, shape.part(33).x, (shape.part(33).y+shape.part(30).y)/2 + move_down, (shape.part(33).x) - nose_height/1, (shape.part(33).y+shape.part(30).y)/2 - nose_height + move_down, (0,0,0,255))
 
     im = draw_mouth(im, shape, draw, colors)
 
@@ -357,6 +373,44 @@ def draw_mouth(im, shape, draw, colors):
     draw.polygon(pts, shadow)
     return im
 
+def add_ears(shape, im):
+    left_ear = Image.open('ears/left.png')
+    right_ear = Image.open('ears/right.png')
+    left_angle, right_angle = get_ear_angles(shape)
+    print 'rotating left ', left_angle, ' and right ', right_angle
+    left_ear = left_ear.rotate(left_angle, resample=Image.BICUBIC, expand = 1)
+    right_ear = right_ear.rotate(right_angle, resample=Image.BICUBIC, expand = 1)
+
+    #TODO: CHANGE SKIN COLOR
+    left_height = abs(shape.part(17).y - shape.part(2).y)
+    right_height = abs(shape.part(26).y - shape.part(14).y)
+    lw, lh = left_ear.size
+    rw, rh = right_ear.size 
+    left_ear = left_ear.resize((int(lw*left_height/lh), left_height), resample=Image.BICUBIC)
+    right_ear = right_ear.resize((int(rw*right_height/rh), right_height), resample=Image.BICUBIC)
+    new_lw, new_lh = left_ear.size
+    new_rw, new_rh = right_ear.size
+    print new_lw, new_lh
+
+    #reverse paste for layers!
+    #make mask out of original image
+    mask = np.asarray(im)
+    mask.setflags(write=True)
+    mask[mask == 255] = 69
+    mask[mask != 69] = 255
+    mask[mask == 69] = 0
+    
+    mask_im = Image.fromarray(np.uint8(mask)).convert('L')
+
+    new_im = Image.new("RGB", (mask_im.size[0], mask_im.size[1]), color=(255,255,255))
+
+    new_im.paste(left_ear, box=((shape.part(0).x-new_lw+new_lw/8, shape.part(17).y+new_lh/5)), mask=left_ear)
+    new_im.paste(right_ear, box=((shape.part(16).x-new_rw/3, shape.part(26).y+new_lh/6)), mask=right_ear)
+
+    new_im.paste(im, box=((0,0)), mask=mask_im)
+
+    return new_im
+
 
 def predict_shape(fname):
     detector = dlib.get_frontal_face_detector()
@@ -435,7 +489,7 @@ def render_big_eyebrows(left, right):
     s_r = cropped_r.sum() / (cropped_r.shape[0] * cropped_r.shape[1])
     fin = (s_l + s_r) / 2. 
     print 'eyebrow energy was ', fin
-    if fin < 0.02:
+    if fin < 0.022:
         return False
     else:
         return True
@@ -547,6 +601,27 @@ def match_anime(left_r, right_r):
             print "using left eye for both."
             left_anime = Image.open('eyes/anime/'+left_files[i_l])
             right_anime = Image.open('eyes/anime/'+right_files[i_l])
+        elif left_score == right_score and GENDER != 'none':
+            print "they're equal, so we're using the correct gender."
+            use = 'left'
+            if GENDER == 'm':
+                if 'm' in left_files[i_l]:
+                    use = 'left'
+                elif 'm' in right_files[i_r]:
+                    use = 'right'
+            elif GENDER == 'f':
+                if 'f' in left_files[i_l]:
+                    use = 'left'
+                elif 'f' in right_files[i_r]:
+                    use = 'right'
+            if use == 'left':
+                print "we decided to use left."
+                left_anime = Image.open('eyes/anime/'+left_files[i_l])
+                right_anime = Image.open('eyes/anime/'+right_files[i_l])
+            else:
+                print "we decided to use right."
+                left_anime = Image.open('eyes/anime/'+left_files[i_r])
+                right_anime = Image.open('eyes/anime/'+right_files[i_r])
         else:
             print "using right eye for both."
             left_anime = Image.open('eyes/anime/'+left_files[i_r])
@@ -574,6 +649,32 @@ def match_anime(left_r, right_r):
 
     return left_anime, right_anime 
 
+
+def get_ear_angles(shape):
+    """returns how much we need to rotate the ears based on face orientation."""
+    lrise = shape.part(3).y - shape.part(0).y
+    lrun = shape.part(3).x - shape.part(0).x
+    print 'left ear slope is ', float(lrise/lrun)
+    left_angle = math.degrees(math.atan(float(lrise/lrun)))
+    rrise = shape.part(16).y - shape.part(13).y
+    rrun = shape.part(16).x - shape.part(13).x
+    print 'right ear slope is ', float(rrise/rrun)
+    right_angle = math.degrees(math.atan(float(rrise/rrun)))
+
+    return -(left_angle-90), -(right_angle+90)
+
+
+
+def get_hair_angle(shape):
+    """returns how much we need to rotate the hair based on eye orientation."""
+    rise = abs(shape.part(36).y - shape.part(45).y)
+    run = abs(shape.part(36).x - shape.part(45).x)
+    print 'the slope is ', float(rise/run)
+    angle = math.degrees(math.atan(float(rise/run)))
+    if shape.part(36).y > shape.part(45).y: #the left eye is higher, rotate clockwise
+        return 360 - angle
+    else:
+        return angle
 
 def quantize_skin(fname, shape):
     img = imread(fname)

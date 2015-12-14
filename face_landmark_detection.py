@@ -88,7 +88,7 @@ for f in glob.glob(os.path.join(faces_folder_path, "*.jpg")):
                                                   shape.part(1)))
         # Draw the face landmarks on the screen.
 
-        im = Image.open("me.jpg")
+        im = Image.open("ex/matthew.jpg")
         draw = ImageDraw.Draw(im)
         prev_x = shape.part(0).x
         prev_y = shape.part(0).y

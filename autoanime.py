@@ -107,7 +107,7 @@ def draw_glasses(im, shapes, gender):
     glasses_im = Image.open(glasses_file)    
     face_width = shapes.part(0).x - shapes.part(16).x
     ratio = -glasses_im.size[0]/float(face_width)
-    glasses_im = glasses_im.resize((int(glasses_im.size[0]/ratio), int(glasses_im.size[1]/ratio)))
+    glasses_im = glasses_im.resize((int(glasses_im.size[0]/ratio), int(glasses_im.size[1]/ratio)), resample=Image.BICUBIC)
     shift_x = (shapes.part(39).x+shapes.part(42).x)/2 - glasses_im.size[0]/2
     shift_y = shapes.part(36).y
     im.paste(glasses_im, box=(shift_x,shift_y), mask=glasses_im)

@@ -51,6 +51,10 @@ def draw_long_hair(shapes,hair_file,im, color):
         hair_file = "hair/"+hair_idx + "-l.png"
 
     hair_im = Image.open(hair_file)
+    #resize
+    pt_0 = ((hair_im.size[0]/2. - 200)*ratio, 410*ratio) 
+    hair_im = hair_im.resize((int(hair_im.size[0]*ratio), int(hair_im.size[1]*ratio)),resample=Image.BICUBIC)
+
     #color hair
     print color 
     if color[0] < 55 and color[1] < 55 and color[2] < 55: #black hair
@@ -66,8 +70,6 @@ def draw_long_hair(shapes,hair_file,im, color):
         hair_im = autoanime.colorize(hair_im, hue)
         print 'colorized hair to hue ', hue
 
-    pt_0 = ((hair_im.size[0]/2. - 200)*ratio, 410*ratio) 
-    hair_im = hair_im.resize((int(hair_im.size[0]*ratio), int(hair_im.size[1]*ratio)),resample=Image.BICUBIC)
     shift_x = int(shapes.part(0).x - pt_0[0])
     shift_y = int(shapes.part(0).y - pt_0[1])
     im.paste(hair_im, box=(shift_x,shift_y), mask=hair_im)
@@ -89,7 +91,10 @@ def draw_hair(shapes,hair_file,im, angle, color):
     print color 
     if color[0] < 55 and color[1] < 55 and color[2] < 55: #black hair
         #black hair, greyscale it.
+        r, g, b, alpha = hair_im.split()
         hair_im = hair_im.convert('LA')
+        hair_im = hair_im.convert('RGBA')
+        hair_im.putalpha(alpha)
         print 'hair turned to black'
     else:
         color_hsv = colorsys.rgb_to_hsv(color[0], color[1], color[2])

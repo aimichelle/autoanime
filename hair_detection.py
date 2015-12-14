@@ -45,10 +45,12 @@ def hair_color(shapes, fname,mask):
 def draw_long_hair(shapes,hair_file,im, color):
     face_width = shapes.part(0).x - shapes.part(16).x
     ratio = -face_width/400.
-
+    y_long_shift = 0
     if "ncc" in hair_file:
         hair_idx = hair_file[-7]
         hair_file = "hair/"+hair_idx + "-l.png"
+        if hair_idx == "5":
+            y_long_shift = 25
 
     hair_im = Image.open(hair_file)
     #color hair
@@ -69,8 +71,8 @@ def draw_long_hair(shapes,hair_file,im, color):
     pt_0 = ((hair_im.size[0]/2. - 200)*ratio, 410*ratio) 
     hair_im = hair_im.resize((int(hair_im.size[0]*ratio), int(hair_im.size[1]*ratio)),resample=Image.BICUBIC)
     shift_x = int(shapes.part(0).x - pt_0[0])
-    shift_y = int(shapes.part(0).y - pt_0[1])
-    im.paste(hair_im, box=(shift_x,shift_y), mask=hair_im)
+    shift_y = int(shapes.part(0).y - pt_0[1]) + y_long_shift
+    im.paste(hair_im, box=(shift_x,shift_y), mask=hair_im) 
     return im
 
 
@@ -78,10 +80,12 @@ def draw_hair(shapes,hair_file,im, angle, color):
     # resize hairfile
     face_width = shapes.part(0).x - shapes.part(16).x
     ratio = -face_width/400.
-
+    shift_y_long = 0
     if "ncc" in hair_file:
         hair_idx = hair_file[-7]
         hair_file = "hair/"+hair_idx + "-s-f.png"
+        if hair_idx == "5":
+            shift_y_long = 25
 
     hair_im = Image.open(hair_file)
     #change color
@@ -107,7 +111,7 @@ def draw_hair(shapes,hair_file,im, angle, color):
     print "we rotated the hair by ", angle
 
     shift_x = int(shapes.part(0).x - pt_0[0])
-    shift_y = int(shapes.part(0).y - pt_0[1])
+    shift_y = int(shapes.part(0).y - pt_0[1]) + shift_y_long
     im.paste(hair_im, box=(shift_x,shift_y), mask=hair_im)
     return im
 

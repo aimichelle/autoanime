@@ -16,6 +16,7 @@ from scipy import signal
 from scipy.cluster.vq import kmeans,vq
 from pylab import imread,imshow,show
 import colorsys
+import hair_detection
 
 MODEL = "shape_predictor_68_face_landmarks.dat"
 DEBUG_PRINT = False
@@ -27,6 +28,7 @@ hsv_to_rgb = np.vectorize(colorsys.hsv_to_rgb)
 #Not sure if it works with lower quality than that. Lol.
 
 def autoanime(fname):
+
     im = Image.open(fname)
     if (im.size[1] > 700):
         print "resizing"
@@ -37,7 +39,6 @@ def autoanime(fname):
     shape = predict_shape(fname)
     
     orig_im = Image.open(fname)
-    new_im = orig_im
 
     new_im = Image.new("RGB", (orig_im.size[0], orig_im.size[1]), color=(255,255,255))
 
@@ -46,7 +47,6 @@ def autoanime(fname):
     new_im = color_skin(new_im, shape, skin_color)
     
     
-
     # Draw outline
     new_im = draw_lineart(new_im, shape, skin_color)
 
@@ -57,9 +57,7 @@ def autoanime(fname):
     ## eyes ##
     new_im = process_eyes(shape, orig_im, new_im)
  
-    print "eyes done!"
 
-    ## eyebrows ##
     new_im = process_eyebrows(shape, orig_im, new_im)
     print "eyebrows done!"
 
@@ -70,8 +68,15 @@ def autoanime(fname):
     #if short hair, add ears
     new_im = add_ears(shape, new_im, skin_color)
 
+    # hair
+
+    mask = hair_detection.get_hair_mask(fname)
+
+    hair_file = hair_detection.match_hair(mask, shape, hair_detection.long_hair(mask,shape), GENDER)
+    new_im = hair_detection.draw_hair(shape, hair_file, new_im)
+
     # Save image
-    new_im.save("test-2.png", "PNG")
+    new_im.save("test.png", "PNG")
 
 
 def draw_forehead(im, shape, colors):
@@ -84,10 +89,10 @@ def draw_forehead(im, shape, colors):
     # face
     points = []
     for i in range(17):
-        if (i <= 5 or i >= 11):
+        if (i <= 4 or i >= 12):
             points.append((shape.part(i).x, shape.part(0).y - (shape.part(i).y - shape.part(0).y)))
         elif i == 9:
-            points.append((shape.part(i).x, shape.part(0).y - (shape.part(5).y - shape.part(0).y)))
+            points.append((shape.part(i).x, shape.part(0).y - (shape.part(4).y - shape.part(0).y)))
     points.append((shape.part(16).x, shape.part(16).y ))
     draw.polygon(points, (int(colors[base_idx][0]),int(colors[base_idx][1]),int(colors[base_idx][2])))
     return im
@@ -173,15 +178,15 @@ def color_skin(im, shape, colors):
                   ((shape.part(11).x + shape.part(10).x)/2, (shape.part(11).y+shape.part(10).y)/2+neck_height/4.)],
                   (int(colors[not base_idx][0]),int(colors[not base_idx][1]),int(colors[not base_idx][2])))
 
-    draw.polygon([((shape.part(6).x+shape.part(7).x)/2, m*(shape.part(6).x+shape.part(7).x)/2+b),
+    draw.polygon([((shape.part(6).x+shape.part(7).x)/2, m*(shape.part(6).x+shape.part(7).x)/2+b-neck_height),
                     ((shape.part(6).x+shape.part(7).x)/2, m*(shape.part(6).x+shape.part(7).x)/2 + b+ neck_height),
                     ((shape.part(6).x+shape.part(7).x)/2-100, m*(shape.part(6).x+shape.part(7).x)/2+b+neck_height),
-                    ((shape.part(6).x+shape.part(7).x)/2-100, m*(shape.part(6).x+shape.part(7).x)/2+b)], (255,255,255))
+                    ((shape.part(6).x+shape.part(7).x)/2-100, m*(shape.part(6).x+shape.part(7).x)/2+b-neck_height)], (255,255,255))
 
-    draw.polygon([((shape.part(9).x+shape.part(10).x)/2, m*(shape.part(6).x+shape.part(7).x)/2 + b),
+    draw.polygon([((shape.part(9).x+shape.part(10).x)/2, m*(shape.part(6).x+shape.part(7).x)/2 + b-neck_height),
                 ((shape.part(9).x+shape.part(10).x)/2, m*(shape.part(6).x+shape.part(7).x)/2 + b+ neck_height),
                 ((shape.part(9).x+shape.part(10).x)/2+100, m*(shape.part(6).x+shape.part(7).x)/2 + b+ neck_height),
-                ((shape.part(9).x+shape.part(10).x)/2+100, m*(shape.part(6).x+shape.part(7).x)/2 + b)], (255,255,255))
+                ((shape.part(9).x+shape.part(10).x)/2+100, m*(shape.part(6).x+shape.part(7).x)/2 + b-neck_height)], (255,255,255))
 
     # face
     draw.polygon([(shape.part(0).x, shape.part(0).y),

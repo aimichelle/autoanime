@@ -15,7 +15,7 @@ from skimage.color import rgb2gray, gray2rgb
 from scipy import signal
 from scipy.cluster.vq import kmeans,vq
 from pylab import imread,imshow,show
-
+import colorsys
 
 MODEL = "shape_predictor_68_face_landmarks.dat"
 DEBUG_PRINT = False
@@ -24,6 +24,12 @@ DEBUG_PRINT = False
 #Not sure if it works with lower quality than that. Lol.
 
 def autoanime(fname):
+    im = Image.open(fname)
+    if (im.size[1] > 700):
+        print "resizing"
+        a = im.resize((int(im.size[0]*float(700)/im.size[1]), 700))
+        a.save("test_resize.jpg")
+        fname = "test_resize.jpg"
     shape = predict_shape(fname)
 
     orig_im = Image.open(fname)
@@ -36,14 +42,16 @@ def autoanime(fname):
     
 
     # Draw outline
-    new_im = draw_lineart(new_im, shape)
+    new_im = draw_lineart(new_im, shape, skin_color)
+
+    new_im = draw_forehead(new_im, shape, skin_color)
 
     # new_im = draw_lineart(orig_im, shape)
     print "lineart done! now starting eyes..."
-
     ## eyes ##
-    #new_im = process_eyes(shape, orig_im, new_im)
+    # new_im = process_eyes(shape, orig_im, new_im)
     print "eyes done!"
+
 
     ## eyebrows ##
     new_im = process_eyebrows(shape, orig_im, new_im)
@@ -51,6 +59,25 @@ def autoanime(fname):
 
     # Save image
     new_im.save("test-2.png", "PNG")
+
+
+def draw_forehead(im, shape, colors):
+    if (0.2126*colors[0][0] + 0.7152*colors[0][1] + 0.0722*colors[0][2]) > (0.2126*colors[1][0] + 0.7152*colors[1][1] + 0.0722*colors[1][2]):
+        base_idx = 0
+    else:
+        base_idx = 1
+    draw = ImageDraw.Draw(im)
+
+    # face
+    points = []
+    for i in range(17):
+        if (i <= 5 or i >= 11):
+            points.append((shape.part(i).x, shape.part(0).y - (shape.part(i).y - shape.part(0).y)))
+        elif i == 9:
+            points.append((shape.part(i).x, shape.part(0).y - (shape.part(5).y - shape.part(0).y)))
+    points.append((shape.part(16).x, shape.part(16).y ))
+    draw.polygon(points, (int(colors[base_idx][0]),int(colors[base_idx][1]),int(colors[base_idx][2])))
+    return im
 
 def process_eyebrows(shape, orig_im, new_im):
     """wrapper for processing eyebrows"""
@@ -96,6 +123,9 @@ def process_eyes(shape, orig_im, new_im):
 
     return new_im
 
+
+
+
 def color_skin(im, shape, colors):
     # Find darkest and lightest color using luminance
     if (0.2126*colors[0][0] + 0.7152*colors[0][1] + 0.0722*colors[0][2]) > (0.2126*colors[1][0] + 0.7152*colors[1][1] + 0.0722*colors[1][2]):
@@ -103,6 +133,31 @@ def color_skin(im, shape, colors):
     else:
         base_idx = 1
     draw = ImageDraw.Draw(im)
+
+     # neck 
+    neck_height = shape.part(4).y - shape.part(3).y +10
+    m = ((shape.part(8).y)+(shape.part(7).y-shape.part(8).y)/6- (shape.part(5).y+shape.part(6).y)/2) / float((shape.part(8).x)+(shape.part(7).x-shape.part(8).x)/6 - (shape.part(5).x + shape.part(6).x)/2)
+    b = (shape.part(5).y+shape.part(6).y)/2 - m*(shape.part(5).x + shape.part(6).x)/2
+    draw.polygon([((shape.part(6).x+shape.part(7).x)/2, m*(shape.part(6).x+shape.part(7).x)/2+b),((shape.part(6).x+shape.part(7).x)/2, m*(shape.part(6).x+shape.part(7).x)/2 + b+ neck_height),
+                  ((shape.part(9).x+shape.part(10).x)/2, m*(shape.part(6).x+shape.part(7).x)/2 + b+ neck_height), ((shape.part(9).x+shape.part(10).x)/2,shape.part(11).y)],
+                   (int(colors[base_idx][0]),int(colors[base_idx][1]),int(colors[base_idx][2])))
+    # neck shadow
+    draw.polygon([((shape.part(5).x + shape.part(6).x)/2, (shape.part(5).y+shape.part(6).y)/2+neck_height/4.),
+                  ((shape.part(8).x)+(shape.part(7).x-shape.part(8).x)/6, (shape.part(8).y)+(shape.part(7).y-shape.part(8).y)/6+neck_height/4.),
+                  (shape.part(8).x, shape.part(8).y+neck_height/4.),
+                  ((shape.part(8).x)+(shape.part(9).x-shape.part(8).x)/6,  (shape.part(8).y)+(shape.part(9).y-shape.part(8).y)/6+neck_height/4.),
+                  ((shape.part(11).x + shape.part(10).x)/2, (shape.part(11).y+shape.part(10).y)/2+neck_height/4.)],
+                  (int(colors[not base_idx][0]),int(colors[not base_idx][1]),int(colors[not base_idx][2])))
+
+    draw.polygon([((shape.part(6).x+shape.part(7).x)/2, m*(shape.part(6).x+shape.part(7).x)/2+b),
+                    ((shape.part(6).x+shape.part(7).x)/2, m*(shape.part(6).x+shape.part(7).x)/2 + b+ neck_height),
+                    ((shape.part(6).x+shape.part(7).x)/2-100, m*(shape.part(6).x+shape.part(7).x)/2+b+neck_height),
+                    ((shape.part(6).x+shape.part(7).x)/2-100, m*(shape.part(6).x+shape.part(7).x)/2+b)], (255,255,255))
+
+    draw.polygon([((shape.part(9).x+shape.part(10).x)/2, m*(shape.part(6).x+shape.part(7).x)/2 + b),
+                ((shape.part(9).x+shape.part(10).x)/2, m*(shape.part(6).x+shape.part(7).x)/2 + b+ neck_height),
+                ((shape.part(9).x+shape.part(10).x)/2+100, m*(shape.part(6).x+shape.part(7).x)/2 + b+ neck_height),
+                ((shape.part(9).x+shape.part(10).x)/2+100, m*(shape.part(6).x+shape.part(7).x)/2 + b)], (255,255,255))
 
     # face
     draw.polygon([(shape.part(0).x, shape.part(0).y),
@@ -118,19 +173,20 @@ def color_skin(im, shape, colors):
                   ((shape.part(13).x + shape.part(12).x)/2, (shape.part(13).y+shape.part(12).y)/2),
                   (shape.part(13).x, shape.part(13).y),
                   (shape.part(16).x, shape.part(16).y)], (int(colors[base_idx][0]),int(colors[base_idx][1]),int(colors[base_idx][2])))
-    # neck 
-    neck_height = shape.part(4).y - shape.part(3).y
-    m = ((shape.part(8).y)+(shape.part(7).y-shape.part(8).y)/6- (shape.part(5).y+shape.part(6).y)/2) / float((shape.part(8).x)+(shape.part(7).x-shape.part(8).x)/6 - (shape.part(5).x + shape.part(6).x)/2)
-    b = (shape.part(5).y+shape.part(6).y)/2 - m*(shape.part(5).x + shape.part(6).x)/2
-    draw.polygon([((shape.part(6).x+shape.part(7).x)/2, m*(shape.part(6).x+shape.part(7).x)/2+b),((shape.part(6).x+shape.part(7).x)/2, m*(shape.part(6).x+shape.part(7).x)/2 + b+ neck_height),
-                  ((shape.part(9).x+shape.part(10).x)/2, m*(shape.part(6).x+shape.part(7).x)/2 + b+ neck_height), ((shape.part(9).x+shape.part(10).x)/2,shape.part(11).y)],
-                   (int(colors[base_idx][0]),int(colors[base_idx][1]),int(colors[base_idx][2])))
+   
 
     # nose
+    pts = []
     nose_height = (shape.part(33).y - shape.part(30).y)/float(5) 
-    draw.polygon([(shape.part(33).x, (shape.part(33).y+shape.part(30).y)/2), (shape.part(33).x+nose_height/3, (shape.part(33).y+shape.part(30).y)/2-nose_height/2), 
-                    ((shape.part(33).x) - nose_height/1, (shape.part(33).y+shape.part(30).y)/2 - nose_height)],
-                 (int(colors[not base_idx][0]),int(colors[not base_idx][1]),int(colors[not base_idx][2])))
+    pts.append( (shape.part(33).x - nose_height/1, (shape.part(33).y+shape.part(30).y)/2 - nose_height))
+    pts.append((shape.part(33).x, (shape.part(33).y + shape.part(30).y)/2.+nose_height/2))
+    # pts.append((shape.part(30).x, shape.part(30).y))
+    pts.append(((shape.part(34).x+shape.part(33).x)/2-nose_height*1.5, shape.part(30).y))
+    
+    # for i in range(33,36):
+    #     pts.append((shape.part(i).x, shape.part(i).y))
+
+    draw.polygon(pts,(int(colors[not base_idx][0]),int(colors[not base_idx][1]),int(colors[not base_idx][2])))
   
     return im
 
@@ -158,7 +214,7 @@ def draw_eyebrows(shape, im, bushy):
     return im
 
 
-def draw_lineart(im, shape):
+def draw_lineart(im, shape, colors):
     draw = ImageDraw.Draw(im)
     s_width = 2
 
@@ -190,13 +246,13 @@ def draw_lineart(im, shape):
     nose_height = (shape.part(33).y - shape.part(30).y)/float(5)
     drawLineWithStroke(s_width, draw, im, shape.part(33).x, (shape.part(33).y+shape.part(30).y)/2, (shape.part(33).x) - nose_height/1, (shape.part(33).y+shape.part(30).y)/2 - nose_height, (0,0,0,255))
 
-    im = draw_mouth(im, shape, draw)
+    im = draw_mouth(im, shape, draw, colors)
 
     # Draw neck
     m = ((shape.part(8).y)+(shape.part(7).y-shape.part(8).y)/6- (shape.part(5).y+shape.part(6).y)/2) / float((shape.part(8).x)+(shape.part(7).x-shape.part(8).x)/6 - (shape.part(5).x + shape.part(6).x)/2)
     b = (shape.part(5).y+shape.part(6).y)/2 - m*(shape.part(5).x + shape.part(6).x)/2
     
-    neck_height = shape.part(4).y - shape.part(3).y
+    neck_height = shape.part(4).y - shape.part(3).y + 10
     drawLineWithStroke(s_width, draw, im, (shape.part(6).x+shape.part(7).x)/2, m*(shape.part(6).x+shape.part(7).x)/2+b, (shape.part(6).x+shape.part(7).x)/2, m*(shape.part(6).x+shape.part(7).x)/2 + b+ neck_height, (0,0,0,255))
     y_pos = m*(shape.part(6).x+shape.part(7).x)/2 + b+ neck_height
     m = ((shape.part(8).y)+(shape.part(9).y-shape.part(8).y)/6- (shape.part(11).y+shape.part(10).y)/2) / float((shape.part(8).x)+(shape.part(9).x-shape.part(8).x)/6 - (shape.part(11).x + shape.part(10).x)/2)
@@ -210,7 +266,12 @@ def draw_lineart(im, shape):
 
     return im
  
-def draw_mouth(im, shape, draw):
+def draw_mouth(im, shape, draw, colors):
+    if (0.2126*colors[0][0] + 0.7152*colors[0][1] + 0.0722*colors[0][2]) > (0.2126*colors[1][0] + 0.7152*colors[1][1] + 0.0722*colors[1][2]):
+        base_idx = 0
+    else:
+        base_idx = 1
+    shadow = (int(colors[not base_idx][0]),int(colors[not base_idx][1]),int(colors[not base_idx][2]))
     # Need to shrink mouth horizontally (in between eyes), check if open smile/frown/etc
 
     # use height of nose as threshold
@@ -236,12 +297,20 @@ def draw_mouth(im, shape, draw):
                 pts.append((shape.part(i).x*ratio + shift_x, shape.part(i).y*ratio+shift_y))
         pts[0] = (pts[0][0] + 3,pts[0][1])
         draw.polygon(pts,(255,255,255))
+        # teeth shadow
+        prev_x = shape.part(60).x * ratio + shift_x 
+        prev_y = shape.part(60).y * ratio + shift_y + 2.5
+        for j in range(61,65):
+            drawLineWithStroke(1,draw,im,prev_x, prev_y,shape.part(j).x*ratio+shift_x, shape.part(j).y*ratio+shift_y+2.5, (150,150,150,255))
+            prev_x = shape.part(j).x * ratio + shift_x 
+            prev_y = shape.part(j).y * ratio + shift_y + 2.5
         drawLineWithStroke(1, draw, im, shape.part(60).x * ratio + shift_x, shape.part(60).y * ratio + shift_y,
                  shape.part(67).x * ratio + shift_x, shape.part(67).y * ratio + shift_y, (0,0,0,255))
         
 
     else: 
         line_range = range(61,65)
+        mouth_height = shape.part(57).y - shape.part(51).y 
 
     prev_x = shape.part(60).x * ratio + shift_x
     prev_y = shape.part(60).y * ratio + shift_y
@@ -250,7 +319,19 @@ def draw_mouth(im, shape, draw):
             drawLineWithStroke(1, draw, im, prev_x, prev_y, shape.part(i).x * ratio + shift_x, shape.part(i).y * ratio + shift_y, (0,0,0,255))
             prev_x = shape.part(i).x * ratio + shift_x
             prev_y = shape.part(i).y * ratio + shift_y
-    
+
+    pts = []
+    prev_x = shape.part(56).x * ratio + shift_x
+    prev_y = shape.part(56).y * ratio + shift_y
+    pts.append((prev_x,prev_y))
+    for i in range(57,59):
+        drawLineWithStroke(1, draw, im, prev_x, prev_y, shape.part(i).x * ratio + shift_x, shape.part(i).y * ratio + shift_y, (shadow[0], shadow[1], shadow[2],255))
+        prev_x = shape.part(i).x * ratio + shift_x
+        prev_y = shape.part(i).y * ratio + shift_y
+
+        pts.append((prev_x,prev_y))
+    pts.append((shape.part(57).x*ratio+shift_x, shape.part(57).y*ratio+shift_y+mouth_height/8.))
+    draw.polygon(pts, shadow)
     return im
 
 
@@ -463,7 +544,14 @@ def quantize_skin(fname, shape):
 
     pixel = np.reshape(img,(img.shape[0]*img.shape[1],3))         
     centroids,_ = kmeans(pixel,2)
-    return centroids
+    new_centroids = []
+    for centroid in centroids:
+        h,l,s = colorsys.rgb_to_hls(centroid[0]/255., centroid[1]/255., centroid[2]/255.)
+        l = l + .1
+        r,g,b = colorsys.hls_to_rgb(h,l,s)
+
+        new_centroids.append([r*255, g*255, b*255])
+    return new_centroids
 
 
 # wrapper to draw thicker lines #

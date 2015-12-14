@@ -32,7 +32,7 @@ def hair_color(shapes, fname):
     r,g,b = colorsys.hls_to_rgb(h,l,s)
     return (r*255,g*255,b*255)
 
-def draw_long_hair(shapes,hair_file,im, color):
+def draw_long_hair(shapes,hair_file,im):
     face_width = shapes.part(0).x - shapes.part(16).x
     ratio = -face_width/400.
 
@@ -41,18 +41,6 @@ def draw_long_hair(shapes,hair_file,im, color):
         hair_file = "hair/"+hair_idx + "-l.png"
 
     hair_im = Image.open(hair_file)
-    #color hair
-    print color 
-    if color[0] < 55 and color[1] < 55 and color[2] < 55: #black hair
-        #black hair, greyscale it.
-        hair_im = hair_im.convert('L')
-        print 'hair turned to black'
-    else:
-        color_hsv = colorsys.rgb_to_hsv(color[0], color[1], color[2])
-        hue = color_hsv[0] * 360
-        hair_im = autoanime.colorize(hair_im, hue)
-        print 'colorized hair to hue ', hue
-
     pt_0 = ((hair_im.size[0]/2. - 200)*ratio, 410*ratio) 
     hair_im = hair_im.resize((int(hair_im.size[0]*ratio), int(hair_im.size[1]*ratio)),resample=Image.BICUBIC)
     shift_x = int(shapes.part(0).x - pt_0[0])
@@ -61,7 +49,7 @@ def draw_long_hair(shapes,hair_file,im, color):
     return im
 
 
-def draw_hair(shapes,hair_file,im, angle, color):
+def draw_hair(shapes,hair_file,im, angle):
     # resize hairfile
     face_width = shapes.part(0).x - shapes.part(16).x
     ratio = -face_width/400.
@@ -71,20 +59,6 @@ def draw_hair(shapes,hair_file,im, angle, color):
         hair_file = "hair/"+hair_idx + "-s-f.png"
 
     hair_im = Image.open(hair_file)
-    #change color
-    #default RGB = 128,83,48
-    print color 
-    if color[0] < 55 and color[1] < 55 and color[2] < 55: #black hair
-        #black hair, greyscale it.
-        hair_im = hair_im.convert('L')
-        print 'hair turned to black'
-    else:
-        color_hsv = colorsys.rgb_to_hsv(color[0], color[1], color[2])
-        hue = color_hsv[0] * 360
-        hair_im = autoanime.colorize(hair_im, hue)
-        print 'colorized hair to hue ', hue
-
-
     pt_0 = ((hair_im.size[0]/2. - 200)*ratio, 410*ratio) 
     hair_im = hair_im.resize((int(hair_im.size[0]*ratio), int(hair_im.size[1]*ratio)),resample=Image.BICUBIC)
     

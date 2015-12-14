@@ -46,7 +46,7 @@ def autoanime(fname):
     #hair
     mask = hair_detection.get_hair_mask(fname)
     long_hair = hair_detection.long_hair(mask,shape)
-    # hair_file = hair_detection.match_hair(mask, shape, long_hair, GENDER)
+    hair_file = hair_detection.match_hair(mask, shape, long_hair, GENDER)
 
     hair_color = hair_detection.hair_color(shape,fname)
 
@@ -137,10 +137,10 @@ def draw_forehead(im, shape, colors):
     # face
     points = []
     for i in range(17):
-        if (i <= 3 or i >= 13):
+        if (i <= 4 or i >= 13):
             points.append((shape.part(i).x, shape.part(0).y - (shape.part(i).y - shape.part(0).y)))
-        elif i == 9:
-            points.append((shape.part(i).x, shape.part(0).y - (shape.part(4).y - shape.part(0).y)))
+        # elif i == 9:
+        #     points.append((shape.part(i).x, shape.part(0).y - (shape.part(3).y - shape.part(0).y)))
     points.append((shape.part(16).x, shape.part(16).y ))
     draw.polygon(points, (int(colors[base_idx][0]),int(colors[base_idx][1]),int(colors[base_idx][2])))
     return im

@@ -55,7 +55,10 @@ def draw_long_hair(shapes,hair_file,im, color):
     print color 
     if color[0] < 55 and color[1] < 55 and color[2] < 55: #black hair
         #black hair, greyscale it.
-        hair_im = hair_im.convert('L')
+        r, g, b, alpha = hair_im.split()
+        hair_im = hair_im.convert('LA')
+        hair_im = hair_im.convert('RGBA')
+        hair_im.putalpha(alpha)
         print 'hair turned to black'
     else:
         color_hsv = colorsys.rgb_to_hsv(color[0], color[1], color[2])

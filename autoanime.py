@@ -17,6 +17,7 @@ from scipy.cluster.vq import kmeans,vq
 from pylab import imread,imshow,show
 import colorsys
 import hair_detection
+from scipy import ndimage
 
 MODEL = "shape_predictor_68_face_landmarks.dat"
 DEBUG_PRINT = False
@@ -37,7 +38,7 @@ def autoanime(fname):
         fname = "test_resize.jpg"
 
     shape = predict_shape(fname)
-    
+
     orig_im = Image.open(fname)
 
     new_im = Image.new("RGB", (orig_im.size[0], orig_im.size[1]), color=(255,255,255))
@@ -49,9 +50,11 @@ def autoanime(fname):
 
     hair_color = hair_detection.hair_color(shape,fname)
 
+
     if "ncc" in hair_file:
         print "we have long hair."
         new_im = hair_detection.draw_long_hair(shape,hair_file,new_im,hair_color)
+
 
     skin_color = quantize_skin(fname,shape)
     new_im = color_skin(new_im, shape, skin_color)
@@ -79,12 +82,49 @@ def autoanime(fname):
 
     #draw the rest of the hair
     angle = hair_detection.get_hair_angle(shape)
+
+    
+
     new_im = hair_detection.draw_hair(shape, hair_file, new_im, angle, hair_color)
+    if detect_glasses(fname,shape):
+        draw_glasses(new_im, shape, GENDER)
+
+
+
+    
+
 
     print "hair all done!"
     print "finished! check the folder for a saved PNG."
     # Save image
     new_im.save("test.png", "PNG")
+
+def draw_glasses(im, shapes, gender):
+    if gender == "f":
+        glasses_file = "glasses/f.png"
+    else:
+        glasses_file = "glasses/m.png"
+    glasses_im = Image.open(glasses_file)    
+    face_width = shapes.part(0).x - shapes.part(16).x
+    ratio = -glasses_im.size[0]/float(face_width)
+    glasses_im = glasses_im.resize((int(glasses_im.size[0]/ratio), int(glasses_im.size[1]/ratio)))
+    shift_x = (shapes.part(39).x+shapes.part(42).x)/2 - glasses_im.size[0]/2
+    shift_y = shapes.part(36).y
+    im.paste(glasses_im, box=(shift_x,shift_y), mask=glasses_im)
+
+def detect_glasses(fname, shapes):
+    img = cv2.imread(fname,0)
+    img = img[shapes.part(38).y - (shapes.part(41).y-shapes.part(38).y) : shapes.part(41).y + (shapes.part(41).y-shapes.part(38).y), shapes.part(36).x:shapes.part(45).x]
+    filtered_img = ndimage.filters.gaussian_filter(img,60) #20 #40
+    mask = img - filtered_img 
+    threshold = 170 # 100
+    mask[mask < threshold] = 0
+    mask[mask >= threshold] = 1
+    mask = mask[:,mask.shape[1]/2 -img.shape[1]/13:mask.shape[1]/2 +img.shape[1]/13 ]
+    cv2.imwrite("mask.png",mask)
+    mask_array = np.asarray(mask)
+
+    return mask_array.sum()/float(mask_array.size) > .15
 
 
 def draw_forehead(im, shape, colors):
@@ -97,7 +137,7 @@ def draw_forehead(im, shape, colors):
     # face
     points = []
     for i in range(17):
-        if (i <= 4 or i >= 12):
+        if (i <= 3 or i >= 13):
             points.append((shape.part(i).x, shape.part(0).y - (shape.part(i).y - shape.part(0).y)))
         elif i == 9:
             points.append((shape.part(i).x, shape.part(0).y - (shape.part(4).y - shape.part(0).y)))

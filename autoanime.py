@@ -847,7 +847,7 @@ def shift_hue(arr, hout):
     arr = np.dstack((r, g, b, a))
     return arr
 
-def colorize(image, hue, saturation):
+def colorize(image, hue):
     """
     Colorize PIL image `original` with the given
     `hue` (hue within 0-360); returns another PIL image.

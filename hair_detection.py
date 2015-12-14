@@ -19,20 +19,21 @@ def hair_color(shapes, fname,mask):
     mask = mask[shapes.part(20).y-(shapes.part(33).y - shapes.part(27).y)*1.65: shapes.part(20).y - (shapes.part(33).y - shapes.part(27).y)/4, shapes.part(0).x:shapes.part(16).x]
     img = img[shapes.part(20).y-(shapes.part(33).y - shapes.part(27).y)*1.65: shapes.part(20).y - (shapes.part(33).y - shapes.part(27).y)/4, shapes.part(0).x:shapes.part(16).x]
     mask = cv2.cvtColor(mask,  cv2.COLOR_BGR2GRAY);
-    num_masked = len(mask.ravel()[np.flatnonzero(mask)])
 
+    num_masked = len(mask.ravel()[np.flatnonzero(mask)])
+   
     cv2.imwrite("cropped_hair.jpg",img)
     i = Image.open("cropped_hair.jpg")
     h = i.histogram()
 
-    r = h[0:256]
-    g = h[256:256*2]
-    b = h[256*2: 256*3]
+    r = h[1:256]
+    g = h[256+1:256*2]
+    b = h[256*2+1: 256*3]
+   
 
-
-    r = sum( i*w for i, w in enumerate(r) ) / (sum(r) - num_masked)
-    g = sum( i*w for i, w in enumerate(g) ) / (sum(g) - num_masked)
-    b =  sum( i*w for i, w in enumerate(b) ) / (sum(b) - num_masked)
+    r = sum( i*w for i, w in enumerate(r) ) / (sum(r)) #- num_masked)
+    g = sum( i*w for i, w in enumerate(g) ) / (sum(g)) #- num_masked)
+    b =  sum( i*w for i, w in enumerate(b) ) / (sum(b)) #- num_masked)
 
 
     h,l,s = colorsys.rgb_to_hls(r/255.,g/255., b/255.)
